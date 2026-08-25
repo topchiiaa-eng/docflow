@@ -1,0 +1,13 @@
+import type { DocumentItem } from '../types'
+
+/** Демо-данные трёх организаций; doc-fail — документ с гарантированной ошибкой подписания (F-7) */
+export const FIXTURES: DocumentItem[] = [
+  { id: 'doc-1', org: 'Компания А', counterparty: 'ООО «ГетБлоггер»', title: 'УПД № 260810/54', kind: 'УПД', sum: 89800, receivedAt: '2026-08-25T09:41:00', status: 'requires_signature', unread: true },
+  { id: 'doc-2', org: 'Компания Б', counterparty: 'ООО «ВебсайтСофт»', title: 'Акт сверки № 809', kind: 'Акт', sum: null, receivedAt: '2026-08-25T08:15:00', status: 'requires_signature', unread: true },
+  { id: 'doc-fail', org: 'Компания В', counterparty: 'ООО «Крипто-Тест»', title: 'УПД № 4451/2', kind: 'УПД', sum: 31200, receivedAt: '2026-08-25T07:58:00', status: 'requires_signature', unread: true },
+  { id: 'doc-3', org: 'Компания В', counterparty: 'АО «ПФ «СКБ Контур»', title: 'Счёт № 31958300', kind: 'Счёт', sum: 26900, receivedAt: '2026-08-24T17:03:00', status: 'info', unread: false },
+  { id: 'doc-4', org: 'Компания А', counterparty: 'ООО «Аренда-Сервис»', title: 'Акт № 31 от 31.07', kind: 'Акт', sum: 54000, receivedAt: '2026-08-24T16:20:00', status: 'signed', unread: false },
+  { id: 'doc-5', org: 'Компания Б', counterparty: 'ООО «Клауд Хостинг»', title: 'УПД № 8807/2', kind: 'УПД', sum: 12400, receivedAt: '2026-08-23T11:36:00', status: 'signed', unread: false },
+  { id: 'doc-6', org: 'Компания А', counterparty: 'ООО «Праздник-Кейтеринг»', title: 'Договор № 77-К', kind: 'Договор', sum: null, receivedAt: '2026-08-22T14:12:00', status: 'info', unread: false },
+  { id: 'doc-7', org: 'Компания В', counterparty: 'ООО «Точка Роста»', title: 'Счёт № 1188', kind: 'Счёт', sum: 7500, receivedAt: '2026-08-21T10:05:00', status: 'signed', unread: false },
+]
