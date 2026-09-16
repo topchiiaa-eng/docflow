@@ -10,7 +10,7 @@ access_token: eyJhbGciOiJFUzI1NiIsImtp… (JWT получен)
     {
         "id": "e076006d-2dcb-4980-b800-f4eea65aed39",
         "title": "УПД № 260810/54",
-        "status": "requires_signature",
+        "status": "signed",
         "organizations": {
             "name": "Компания А"
         }
@@ -72,24 +72,24 @@ HTTP 403
 
 ### 5. PATCH unread=false (пометить прочитанным) — разрешено
 ```
-{'title': 'УПД № 260810/54', 'unread': False}
+{'title': 'Акт сверки № 809', 'unread': False}
 ```
 
-### 6. POST /rest/v1/rpc/sign_document — роль signer (Компания А) → подписан
+### 6. POST /rest/v1/rpc/sign_document — роль signer (Компания А/Б) → подписан
 ```
-{'title': 'УПД № 260810/54', 'status': 'signed'}
+{'ok': True, 'title': 'Акт сверки № 809', 'status': 'signed'}
 ```
 
 ### 7. НЕГАТИВ: sign_document для Компании В — роль operator → отказ
 ```
-{"code":"P0001","details":null,"hint":null,"message":"Подписание доступно только роли «Подписант»"}
-HTTP 400
+{"ok": false, "error": "Подписание доступно только роли «Подписант»"}
+HTTP 200
 ```
 
 ### 8. НЕГАТИВ: повторное подписание уже подписанного
 ```
-{"code":"P0001","details":null,"hint":null,"message":"Документ не требует подписи"}
-HTTP 400
+{"ok": false, "error": "Документ не требует подписи"}
+HTTP 200
 ```
 
 ### 9. GET /rest/v1/sign_attempts — append-only журнал (успех + отказ)
@@ -99,6 +99,36 @@ HTTP 400
         "success": true,
         "detail": null,
         "attempted_at": "2026-09-16T07:37:57.817152+00:00"
+    },
+    {
+        "success": false,
+        "detail": "отказ: документ не требует подписи",
+        "attempted_at": "2026-09-16T08:10:44.073303+00:00"
+    },
+    {
+        "success": false,
+        "detail": "отказ: роль без права подписи",
+        "attempted_at": "2026-09-16T08:10:44.431868+00:00"
+    },
+    {
+        "success": false,
+        "detail": "отказ: документ не требует подписи",
+        "attempted_at": "2026-09-16T08:10:44.790199+00:00"
+    },
+    {
+        "success": true,
+        "detail": null,
+        "attempted_at": "2026-09-16T08:11:24.842517+00:00"
+    },
+    {
+        "success": false,
+        "detail": "отказ: роль без права подписи",
+        "attempted_at": "2026-09-16T08:11:25.212661+00:00"
+    },
+    {
+        "success": false,
+        "detail": "отказ: документ не требует подписи",
+        "attempted_at": "2026-09-16T08:11:25.581703+00:00"
     }
 ]
 ```

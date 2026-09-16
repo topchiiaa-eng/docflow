@@ -18,7 +18,12 @@ curl -s "$SUPA/rest/v1/documents?select=id" "${H[@]}" -w "\nHTTP %{http_code}\n"
 
 # ID выбираем на стороне Python: кириллица в URL-фильтре PostgREST требует percent-encoding
 ALL=$(curl -s "$SUPA/rest/v1/documents?select=id,counterparty" "${H[@]}" "${A[@]}")
-DOC_OK=$(echo "$ALL"   | python3 -c "import json,sys; print(next(d['id'] for d in json.load(sys.stdin) if 'ГетБлоггер' in d['counterparty']))")
+# DOC_OK — любой ещё не подписанный документ организации, где пользователь signer (А или Б);
+# скрипт можно запускать повторно: подписанные документы не выбираются
+DOC_OK=$(curl -s "$SUPA/rest/v1/documents?select=id,organizations(name)&status=eq.requires_signature" "${H[@]}" "${A[@]}" | python3 -c "
+import json,sys
+docs=[d for d in json.load(sys.stdin) if d['organizations']['name'] in ('Компания А','Компания Б')]
+print(docs[0]['id'] if docs else '')")
 DOC_DENY=$(echo "$ALL" | python3 -c "import json,sys; print(next(d['id'] for d in json.load(sys.stdin) if 'Крипто' in d['counterparty']))")
 
 step "4. НЕГАТИВ: PATCH status=signed напрямую — запрещено правами колонок"
@@ -27,8 +32,9 @@ curl -s -X PATCH "$SUPA/rest/v1/documents?id=eq.$DOC_OK" "${H[@]}" "${A[@]}" -d 
 step "5. PATCH unread=false (пометить прочитанным) — разрешено"
 curl -s -X PATCH "$SUPA/rest/v1/documents?id=eq.$DOC_OK" "${H[@]}" "${A[@]}" -H "Prefer: return=representation" -d '{"unread":false}' | python3 -c "import json,sys; d=json.load(sys.stdin)[0]; print({'title':d['title'],'unread':d['unread']})"; echo '```'
 
-step "6. POST /rest/v1/rpc/sign_document — роль signer (Компания А) → подписан"
-curl -s "$SUPA/rest/v1/rpc/sign_document" "${H[@]}" "${A[@]}" -d "{\"doc_id\":\"$DOC_OK\"}" | python3 -c "import json,sys; d=json.load(sys.stdin); print({'ok':d['ok'],'title':d['document']['title'],'status':d['document']['status']})"; echo '```'
+step "6. POST /rest/v1/rpc/sign_document — роль signer (Компания А/Б) → подписан"
+[ -z "$DOC_OK" ] && echo "(все документы signer-организаций уже подписаны прошлыми прогонами — зарегистрируйте нового пользователя)"
+curl -s "$SUPA/rest/v1/rpc/sign_document" "${H[@]}" "${A[@]}" -d "{\"doc_id\":\"$DOC_OK\"}" | python3 -c "import json,sys; d=json.load(sys.stdin); print({'ok':d['ok'],'title':d['document']['title'],'status':d['document']['status']} if d['ok'] else d)"; echo '```'
 
 step "7. НЕГАТИВ: sign_document для Компании В — роль operator → отказ"
 curl -s "$SUPA/rest/v1/rpc/sign_document" "${H[@]}" "${A[@]}" -d "{\"doc_id\":\"$DOC_DENY\"}" -w "\nHTTP %{http_code}\n"; echo '```'

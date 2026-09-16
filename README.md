@@ -17,6 +17,8 @@ npm run dev        # http://localhost:5173 — демо-режим на мок-�
 
 **С реальным бэкендом (ДЗ-5):** создайте проект Supabase, примените в SQL Editor по порядку обе миграции из `supabase/migrations/`, затем `cp .env.example .env.local`, впишите URL и publishable (anon) key проекта и перезапустите dev-сервер. Появится экран входа; **регистрация любого нового пользователя автоматически выдаёт демо-набор** (3 организации, 6 документов; в «Компании В» — роль без права подписи для проверки политики). Подробно: [backend_documentation.md](backend_documentation.md).
 
+Тестовые учётные записи (демо-база): `demo@docflow-test.ru` / `Demo12345!`, `reviewer@docflow-test.ru` / `Review12345!` — или зарегистрируйтесь: демо-набор создаётся автоматически.
+
 Проверка API без фронтенда: `SUPA=… ANON=… EMAIL=… PASS=… ./scripts/api-tests.sh` (10 запросов, включая негативные; пример вывода — [docs/api-tests-output.md](docs/api-tests-output.md)).
 
 Прочее: `npm test` — тесты (12), `npm run build` — production-сборка, `node scripts/screenshots.mjs` — скриншоты для отчёта (нужен запущенный dev-сервер и установленный Chrome).

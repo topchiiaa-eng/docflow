@@ -11,7 +11,11 @@
 
 begin;
 
-create or replace function public.sign_document(doc_id uuid)
+-- Тип результата меняется (documents → jsonb): create or replace этого не умеет (42P13),
+-- поэтому функцию нужно пересоздать.
+drop function if exists public.sign_document(uuid);
+
+create function public.sign_document(doc_id uuid)
 returns jsonb
 language plpgsql security definer set search_path = public
 as $$
