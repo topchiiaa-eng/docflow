@@ -148,8 +148,10 @@ grant  execute on function public.sign_document(uuid) to authenticated;
 -- При регистрации пользователь получает 3 организации и комплект документов;
 -- в «Компании В» он operator (без права подписи) — для живой проверки политики.
 
-create or replace function public.handle_new_user()
-returns trigger
+-- Сидинг вынесен в отдельную функцию: её можно вызвать и для уже существующего
+-- пользователя (например, после пересоздания схемы), не только из триггера.
+create or replace function public.seed_demo_data(uid uuid)
+returns void
 language plpgsql security definer set search_path = public
 as $$
 declare
@@ -160,9 +162,9 @@ begin
   insert into organizations (name) values ('Компания В') returning id into org_c;
 
   insert into org_members (org_id, user_id, role) values
-    (org_a, new.id, 'signer'),
-    (org_b, new.id, 'signer'),
-    (org_c, new.id, 'operator');
+    (org_a, uid, 'signer'),
+    (org_b, uid, 'signer'),
+    (org_c, uid, 'operator');
 
   insert into documents (org_id, counterparty, title, kind, sum, received_at, status, unread) values
     (org_a, 'ООО «ГетБлоггер»',    'УПД № 260810/54',   'УПД',  89800, now() - interval '2 hours', 'requires_signature', true),
@@ -171,7 +173,15 @@ begin
     (org_c, 'АО «ПФ «СКБ Контур»', 'Счёт № 31958300',   'Счёт', 26900, now() - interval '1 day',   'info',   false),
     (org_a, 'ООО «Аренда-Сервис»', 'Акт № 31 от 31.07', 'Акт',  54000, now() - interval '1 day',   'signed', false),
     (org_b, 'ООО «Клауд Хостинг»', 'УПД № 8807/2',      'УПД',  12400, now() - interval '2 days',  'signed', false);
+end;
+$$;
 
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  perform public.seed_demo_data(new.id);
   return new;
 end;
 $$;

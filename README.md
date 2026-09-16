@@ -15,7 +15,9 @@ npm install
 npm run dev        # http://localhost:5173 — демо-режим на мок-данных
 ```
 
-**С реальным бэкендом (ДЗ-5):** создайте проект Supabase, примените миграцию `supabase/migrations/…_init.sql` в SQL Editor, затем `cp .env.example .env.local`, впишите URL и anon key проекта и перезапустите dev-сервер. Появится экран входа; регистрация выдаёт демо-набор данных. Подробно: [backend_documentation.md](backend_documentation.md).
+**С реальным бэкендом (ДЗ-5):** создайте проект Supabase, примените в SQL Editor по порядку обе миграции из `supabase/migrations/`, затем `cp .env.example .env.local`, впишите URL и publishable (anon) key проекта и перезапустите dev-сервер. Появится экран входа; **регистрация любого нового пользователя автоматически выдаёт демо-набор** (3 организации, 6 документов; в «Компании В» — роль без права подписи для проверки политики). Подробно: [backend_documentation.md](backend_documentation.md).
+
+Проверка API без фронтенда: `SUPA=… ANON=… EMAIL=… PASS=… ./scripts/api-tests.sh` (10 запросов, включая негативные; пример вывода — [docs/api-tests-output.md](docs/api-tests-output.md)).
 
 Прочее: `npm test` — тесты (12), `npm run build` — production-сборка, `node scripts/screenshots.mjs` — скриншоты для отчёта (нужен запущенный dev-сервер и установленный Chrome).
 
@@ -35,25 +37,27 @@ npm run dev        # http://localhost:5173 — демо-режим на мок-�
 - <1024px — панель документа открывается поверх списка (оверлей с закрытием);
 - KPI и фильтры перестраиваются на узких экранах.
 
-Скриншоты: [docs/screenshots](docs/screenshots) (desktop / mobile / loading / error).
+Скриншоты: [docs/screenshots](docs/screenshots) — демо-режим (desktop / mobile / loading / error) и живой бэкенд (live-login / live-desktop / live-mobile).
 
 ## Структура
 
 ```
 src/
+├── api/index.ts          # выбор провайдера: Supabase (если задан .env.local) или мок
+├── api/supabaseProvider.ts # EdoProvider поверх PostgREST + RPC (+ тесты)
 ├── api/mockProvider.ts   # мок-адаптер EdoProvider (задержка, спецслучаи ошибок)
 ├── mocks/fixtures.ts     # демо-данные
 ├── lib/documents.ts      # чистая логика: фильтры, KPI, форматирование (+ юниты)
 ├── components/           # KpiTiles, FiltersBar, DocumentList, DetailPanel,
-│                         # SignDialog, StatusBadge, StateViews
+│                         # SignDialog, StatusBadge, StateViews, AuthGate (вход/регистрация)
 ├── App.tsx               # состояние экрана, master-detail, поток подписания
 └── App.test.tsx          # компонентные тесты сценариев (6)
 ```
 
 ## Тесты
 
-12 тестов: юниты чистой логики (фильтры-комбинации, пустой результат, форматирование сумм, KPI) + компонентные сценарии (загрузка ленты, error-state с «Повторить», поиск и сброс фильтров, подписание через диалог, отмена, ошибка подписания). Позитивные и негативные ветки у каждой ключевой функции.
+16 тестов: юниты чистой логики, тесты Supabase-провайдера на фейковом клиенте (маппинг, ok/ok:false/транспортная ошибка) (фильтры-комбинации, пустой результат, форматирование сумм, KPI) + компонентные сценарии (загрузка ленты, error-state с «Повторить», поиск и сброс фильтров, подписание через диалог, отмена, ошибка подписания). Позитивные и негативные ветки у каждой ключевой функции.
 
 ```bash
-npm test   # Tests 12 passed (12)
+npm test   # Tests 16 passed (16)
 ```

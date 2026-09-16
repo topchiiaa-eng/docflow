@@ -44,9 +44,13 @@ export function createSupabaseProvider(sb: SupabaseClient): EdoProvider {
     },
 
     async sign(documentId) {
-      // единственный путь подписания — RPC с проверкой роли на стороне БД
-      const { error } = await sb.rpc('sign_document', { doc_id: documentId })
+      // единственный путь подписания — RPC с проверкой роли на стороне БД.
+      // Бизнес-отказы приходят как {ok:false, error} (а не исключением),
+      // чтобы запись об отказе в журнале sign_attempts не откатывалась.
+      const { data, error } = await sb.rpc('sign_document', { doc_id: documentId })
       if (error) throw new Error(error.message)
+      const result = data as { ok: boolean; error?: string }
+      if (!result.ok) throw new Error(result.error ?? 'Не удалось подписать документ')
     },
 
     async markRead(documentId) {
