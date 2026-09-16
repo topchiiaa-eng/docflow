@@ -1,6 +1,6 @@
 # ДокПоток — фронтенд (демо-режим)
 
-Реализация интерфейса веб-приложения **«ДокПоток»** — единой входящей ЭДО-документов для группы юрлиц — по ТЗ v1.3 из ДЗ-3 (репозиторий ai-ui-homework) (UI-концепция «Дашборд» в светлой теме). Данные — мок-адаптер провайдера ЭДО (ТЗ, F-7): бэкенд не требуется.
+Реализация интерфейса веб-приложения **«ДокПоток»** — единой входящей ЭДО-документов для группы юрлиц — по ТЗ v1.3 из ДЗ-3 (репозиторий ai-ui-homework) (UI-концепция «Дашборд» в светлой теме). Данные: **Supabase** (PostgreSQL + Auth + RLS, см. [backend_documentation.md](backend_documentation.md)) или демо-режим на мок-адаптере (ТЗ, F-7), если бэкенд не настроен.
 
 Разработано в паре с AI-агентом **Claude Code** по правилам проекта [CLAUDE.md](CLAUDE.md); процесс — в [development_report.md](development_report.md).
 
@@ -12,8 +12,10 @@ Vite · React 19 · TypeScript (strict) · Tailwind CSS v4 · Vitest + Testing L
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 — демо-режим на мок-данных
 ```
+
+**С реальным бэкендом (ДЗ-5):** создайте проект Supabase, примените миграцию `supabase/migrations/…_init.sql` в SQL Editor, затем `cp .env.example .env.local`, впишите URL и anon key проекта и перезапустите dev-сервер. Появится экран входа; регистрация выдаёт демо-набор данных. Подробно: [backend_documentation.md](backend_documentation.md).
 
 Прочее: `npm test` — тесты (12), `npm run build` — production-сборка, `node scripts/screenshots.mjs` — скриншоты для отчёта (нужен запущенный dev-сервер и установленный Chrome).
 

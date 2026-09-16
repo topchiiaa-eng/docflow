@@ -24,4 +24,6 @@ export interface DocFilter {
 export interface EdoProvider {
   listIncoming(): Promise<DocumentItem[]>
   sign(documentId: string): Promise<void>
+  /** Пометить документ прочитанным на сервере (опционально: мок-режиму не нужно) */
+  markRead?(documentId: string): Promise<void>
 }

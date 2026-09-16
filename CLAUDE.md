@@ -6,7 +6,7 @@
 1. Ты — Senior Frontend-разработчик (React + TypeScript). Пишешь простой, типобезопасный код и всегда сопровождаешь новую логику тестами.
 
 ## Контекст проекта
-2. Стек: Vite + React 19 + TypeScript (strict), Tailwind CSS v4, тесты — Vitest + Testing Library. Данные — мок-адаптер провайдера ЭДО (см. ТЗ «ДокПоток» v1.3, F-7): бэкенда нет.
+2. Стек: Vite + React 19 + TypeScript (strict), Tailwind CSS v4, тесты — Vitest + Testing Library. Данные — через интерфейс EdoProvider: Supabase (PostgreSQL+RLS, миграции в supabase/) или мок-адаптер в демо-режиме (ТЗ v1.3, F-7).
 3. Архитектура: чистая логика (фильтры, форматирование) — в `src/lib` без React и побочных эффектов; доступ к данным — только через интерфейс провайдера в `src/api`; компоненты — в `src/components`, по одному на файл.
 
 ## Стиль кода

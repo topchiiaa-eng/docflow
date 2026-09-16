@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DocFilter, DocumentItem, EdoProvider } from './types'
-import { createMockProvider } from './api/mockProvider'
+import { provider as appProvider, isDemo } from './api'
 import { filterDocuments } from './lib/documents'
 import { KpiTiles } from './components/KpiTiles'
 import { FiltersBar } from './components/FiltersBar'
@@ -11,17 +11,23 @@ import { ErrorView, LoadingView } from './components/StateViews'
 
 const EMPTY_FILTER: DocFilter = { org: 'all', status: 'all', query: '' }
 
-// Единственный экземпляр на модуль: дефолт вида `provider = createMockProvider()`
-// в параметрах компонента создавал бы НОВЫЙ объект на каждый рендер и через
+// Единственный экземпляр на модуль (из src/api): дефолт, создающий провайдер
+// в параметрах компонента, порождал бы НОВЫЙ объект на каждый рендер и через
 // useCallback([provider]) зацикливал загрузку (баг, найденный по логам консоли).
-const defaultProvider = createMockProvider()
+const defaultProvider = appProvider
 
 type LoadState =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
   | { kind: 'ready'; docs: DocumentItem[] }
 
-export default function App({ provider = defaultProvider }: { provider?: EdoProvider }) {
+interface AppProps {
+  provider?: EdoProvider
+  userEmail?: string | null
+  onLogout?: (() => void) | null
+}
+
+export default function App({ provider = defaultProvider, userEmail = null, onLogout = null }: AppProps) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [filter, setFilter] = useState<DocFilter>(EMPTY_FILTER)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -52,12 +58,13 @@ export default function App({ provider = defaultProvider }: { provider?: EdoProv
   const openDoc = (id: string) => {
     setSelectedId(id)
     setSignError(null)
-    // открытие карточки помечает документ прочитанным (US-3)
+    // открытие карточки помечает документ прочитанным (US-3) — локально и на сервере
     setState((s) =>
       s.kind === 'ready'
         ? { kind: 'ready', docs: s.docs.map((d) => (d.id === id ? { ...d, unread: false } : d)) }
         : s,
     )
+    provider.markRead?.(id).catch((e: unknown) => console.error('markRead failed:', e))
   }
 
   // Подписание — только после подтверждения в диалоге (правило 8 CLAUDE.md)
@@ -92,8 +99,21 @@ export default function App({ provider = defaultProvider }: { provider?: EdoProv
             Док<span className="text-emerald-600">Поток</span>
           </span>
           <span className="hidden text-xs text-slate-400 sm:inline">
-            единая входящая ЭДО · демо-режим (мок-провайдер)
+            {isDemo ? 'единая входящая ЭДО · демо-режим (мок-провайдер)' : 'единая входящая ЭДО'}
           </span>
+          {userEmail && (
+            <span className="ml-auto flex items-center gap-2 text-xs text-slate-500">
+              <span className="hidden sm:inline">{userEmail}</span>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="rounded-lg border border-slate-300 px-2.5 py-1 font-semibold hover:bg-slate-50"
+                >
+                  Выйти
+                </button>
+              )}
+            </span>
+          )}
         </div>
       </header>
 
