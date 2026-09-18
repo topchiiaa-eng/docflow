@@ -15,7 +15,9 @@ describe('filterDocuments', () => {
   })
 
   it('возвращает пустой список, если ничего не подходит (негативный сценарий)', () => {
-    expect(filterDocuments(FIXTURES, { org: 'Компания А', status: 'all', query: 'несуществующее' })).toEqual([])
+    expect(filterDocuments(FIXTURES, { org: 'Компания А', status: 'all', query: 'несуществующее' })).toEqual(
+      [],
+    )
   })
 })
 

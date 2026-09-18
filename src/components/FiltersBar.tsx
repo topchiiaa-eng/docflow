@@ -12,7 +12,9 @@ const input =
 export function FiltersBar({ filter, orgs, onChange }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <label className="sr-only" htmlFor="f-org">Организация</label>
+      <label className="sr-only" htmlFor="f-org">
+        Организация
+      </label>
       <select
         id="f-org"
         className={input}
@@ -21,11 +23,15 @@ export function FiltersBar({ filter, orgs, onChange }: Props) {
       >
         <option value="all">Все организации</option>
         {orgs.map((o) => (
-          <option key={o} value={o}>{o}</option>
+          <option key={o} value={o}>
+            {o}
+          </option>
         ))}
       </select>
 
-      <label className="sr-only" htmlFor="f-status">Статус</label>
+      <label className="sr-only" htmlFor="f-status">
+        Статус
+      </label>
       <select
         id="f-status"
         className={input}

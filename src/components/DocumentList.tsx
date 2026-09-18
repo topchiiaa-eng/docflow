@@ -43,7 +43,9 @@ export function DocumentList({ docs, selectedId, onSelect, onResetFilters }: Pro
                 <div className="mt-0.5 text-xs text-slate-500">
                   {d.org} · {formatDate(d.receivedAt)}
                 </div>
-                <div className="mt-2"><StatusBadge status={d.status} /></div>
+                <div className="mt-2">
+                  <StatusBadge status={d.status} />
+                </div>
               </div>
               <div className="shrink-0 text-sm font-bold whitespace-nowrap">{formatSum(d.sum)}</div>
             </div>

@@ -1,5 +1,6 @@
 #!/bin/bash
-# Проверка API Supabase (ДЗ-5, Шаг 8). Требует: SUPA, ANON, EMAIL, PASS в окружении.
+# Проверка API Supabase (ДЗ-5, Шаг 8). Требует SUPA, ANON, EMAIL, PASS в окружении:
+#   set -a; source .env.test.local; set +a; ./scripts/api-tests.sh   (не передавайте пароль аргументом — попадёт в историю shell)
 set -u
 export PYTHONIOENCODING=utf-8 LANG=ru_RU.UTF-8
 H=(-H "apikey: $ANON" -H "Content-Type: application/json")

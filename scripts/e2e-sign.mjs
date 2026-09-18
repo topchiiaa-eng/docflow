@@ -32,8 +32,11 @@ try {
   await page.screenshot({ path: `${OUT}/live-sign-dialog.png` })
   await clickByText(page, 'Подтвердить')
   await page.waitForFunction(
-    () => document.querySelectorAll('section[aria-label="Карточка документа"] span').length &&
-          [...document.querySelectorAll('section[aria-label="Карточка документа"] span')].some((s) => s.textContent === 'Подписан'),
+    () =>
+      document.querySelectorAll('section[aria-label="Карточка документа"] span').length &&
+      [...document.querySelectorAll('section[aria-label="Карточка документа"] span')].some(
+        (s) => s.textContent === 'Подписан',
+      ),
     { timeout: 15_000 },
   )
   await page.screenshot({ path: `${OUT}/live-signed.png` })
@@ -43,7 +46,9 @@ try {
   await clickByText(page, 'Крипто-Тест')
   await clickByText(page, 'Утвердить и подписать')
   await clickByText(page, 'Подтвердить')
-  const alert = await page.waitForSelector('section[aria-label="Карточка документа"] [role=alert]', { timeout: 15_000 })
+  const alert = await page.waitForSelector('section[aria-label="Карточка документа"] [role=alert]', {
+    timeout: 15_000,
+  })
   const text = await alert.evaluate((el) => el.textContent)
   await page.screenshot({ path: `${OUT}/live-sign-denied.png` })
   console.log(`ok: отказ по роли показан — «${text}»`)

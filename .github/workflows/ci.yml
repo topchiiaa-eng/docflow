@@ -1,0 +1,97 @@
+# CI/CD «ДокПоток» (ДЗ-6, Шаг 1). Сгенерировано с AI-агентом Claude Code.
+#
+# quality  → на каждый push и pull request: зависимости, линтер, форматирование,
+#            типы, тесты, production-сборка (артефакт dist).
+# deploy   → только при push в main и только после зелёного quality:
+#            публикация dist на GitHub Pages (hosting без отдельного аккаунта).
+#
+# Секреты/переменные репозитория (Settings → Secrets and variables → Actions):
+#   secrets.VITE_SUPABASE_URL, secrets.VITE_SUPABASE_ANON_KEY — бэкенд (publishable key)
+#   vars.VITE_YM_ID — счётчик Яндекс.Метрики (необязательно)
+# Без секретов сборка проходит в демо-режиме на мок-данных.
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint · Format · Types · Tests · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Аудит зависимостей (production)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Линтер (oxlint, 0 предупреждений)
+        run: npm run lint
+
+      - name: Форматирование (prettier --check)
+        run: npm run format:check
+
+      - name: Проверка типов (tsc)
+        run: npm run typecheck
+
+      - name: Тесты (vitest)
+        run: npm run test:ci
+
+      - name: Сборка (vite build)
+        env:
+          # Публикуемся по адресу https://<owner>.github.io/<repo>/ — Vite нужен base
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_YM_ID: ${{ vars.VITE_YM_ID }}
+        run: npm run build
+
+      - name: Отчёт о размере бандла
+        run: du -sh dist && ls -la dist/assets
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy → GitHub Pages
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Smoke-check после деплоя
+        run: |
+          sleep 15
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${{ steps.deployment.outputs.page_url }}")
+          echo "GET ${{ steps.deployment.outputs.page_url }} → $code"
+          test "$code" = "200"

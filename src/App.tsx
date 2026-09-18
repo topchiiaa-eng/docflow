@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { DocFilter, DocumentItem, EdoProvider } from './types'
 import { provider as appProvider, isDemo } from './api'
+import { log } from './lib/logger'
+import { track } from './lib/analytics'
 import { filterDocuments } from './lib/documents'
 import { KpiTiles } from './components/KpiTiles'
 import { FiltersBar } from './components/FiltersBar'
@@ -10,6 +12,8 @@ import { SignDialog } from './components/SignDialog'
 import { ErrorView, LoadingView } from './components/StateViews'
 
 const EMPTY_FILTER: DocFilter = { org: 'all', status: 'all', query: '' }
+// Стабильная ссылка для «нет данных»: новый [] на каждый рендер сбрасывал бы useMemo
+const NO_DOCS: DocumentItem[] = []
 
 // Единственный экземпляр на модуль (из src/api): дефолт, создающий провайдер
 // в параметрах компонента, порождал бы НОВЫЙ объект на каждый рендер и через
@@ -17,17 +21,21 @@ const EMPTY_FILTER: DocFilter = { org: 'all', status: 'all', query: '' }
 const defaultProvider = appProvider
 
 type LoadState =
-  | { kind: 'loading' }
-  | { kind: 'error'; message: string }
-  | { kind: 'ready'; docs: DocumentItem[] }
+  { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; docs: DocumentItem[] }
 
 interface AppProps {
   provider?: EdoProvider
   userEmail?: string | null
+  displayName?: string | null
   onLogout?: (() => void) | null
 }
 
-export default function App({ provider = defaultProvider, userEmail = null, onLogout = null }: AppProps) {
+export default function App({
+  provider = defaultProvider,
+  userEmail = null,
+  displayName = null,
+  onLogout = null,
+}: AppProps) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [filter, setFilter] = useState<DocFilter>(EMPTY_FILTER)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -35,22 +43,33 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
   const [signing, setSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setState({ kind: 'loading' })
-    try {
-      const docs = await provider.listIncoming()
-      setState({ kind: 'ready', docs })
-    } catch (e) {
-      console.error('listIncoming failed:', e)
-      setState({ kind: 'error', message: e instanceof Error ? e.message : 'Неизвестная ошибка' })
-    }
-  }, [provider])
-
+  // Загрузка привязана к счётчику попыток: «Повторить» переводит экран в loading
+  // в обработчике клика и инкрементирует attempt; сам эффект меняет состояние
+  // только асинхронно и игнорирует устаревшие ответы (защита от гонки).
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
-    void load()
-  }, [load])
+    let cancelled = false
+    provider
+      .listIncoming()
+      .then((docs) => {
+        if (!cancelled) setState({ kind: 'ready', docs })
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return
+        log.error('documents.load_failed', { message: e instanceof Error ? e.message : String(e) })
+        setState({ kind: 'error', message: e instanceof Error ? e.message : 'Неизвестная ошибка' })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [provider, attempt])
 
-  const docs = state.kind === 'ready' ? state.docs : []
+  const retry = () => {
+    setState({ kind: 'loading' })
+    setAttempt((a) => a + 1)
+  }
+
+  const docs = state.kind === 'ready' ? state.docs : NO_DOCS
   const orgs = useMemo(() => [...new Set(docs.map((d) => d.org))], [docs])
   const visible = useMemo(() => filterDocuments(docs, filter), [docs, filter])
   const selected = docs.find((d) => d.id === selectedId) ?? null
@@ -64,7 +83,10 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
         ? { kind: 'ready', docs: s.docs.map((d) => (d.id === id ? { ...d, unread: false } : d)) }
         : s,
     )
-    provider.markRead?.(id).catch((e: unknown) => console.error('markRead failed:', e))
+    track('document_open')
+    provider
+      .markRead?.(id)
+      .catch((e: unknown) => log.warn('document.mark_read_failed', { id, message: String(e) }))
   }
 
   // Подписание — только после подтверждения в диалоге (правило 8 CLAUDE.md)
@@ -73,8 +95,11 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
     setConfirming(false)
     setSigning(true)
     setSignError(null)
+    track('sign_confirm')
     try {
       await provider.sign(selected.id)
+      log.info('document.signed', { id: selected.id })
+      track('sign_success')
       setState((s) =>
         s.kind === 'ready'
           ? {
@@ -84,8 +109,10 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
           : s,
       )
     } catch (e) {
-      console.error('sign failed:', e)
-      setSignError(e instanceof Error ? e.message : 'Не удалось подписать документ')
+      const message = e instanceof Error ? e.message : 'Не удалось подписать документ'
+      log.warn('document.sign_denied', { id: selected.id, message })
+      track('sign_denied')
+      setSignError(message)
     } finally {
       setSigning(false)
     }
@@ -103,7 +130,10 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
           </span>
           {userEmail && (
             <span className="ml-auto flex items-center gap-2 text-xs text-slate-500">
-              <span className="hidden sm:inline">{userEmail}</span>
+              <span className="hidden sm:inline">
+                {displayName ? `${displayName} · ` : ''}
+                {userEmail}
+              </span>
               {onLogout && (
                 <button
                   onClick={onLogout}
@@ -119,12 +149,20 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
 
       <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5">
         {state.kind === 'loading' && <LoadingView />}
-        {state.kind === 'error' && <ErrorView message={state.message} onRetry={load} />}
+        {state.kind === 'error' && <ErrorView message={state.message} onRetry={retry} />}
 
         {state.kind === 'ready' && (
           <>
             <KpiTiles docs={docs} />
-            <FiltersBar filter={filter} orgs={orgs} onChange={setFilter} />
+            <FiltersBar
+              filter={filter}
+              orgs={orgs}
+              onChange={(f) => {
+                if (f.query !== filter.query) track('search')
+                else track('filter_change')
+                setFilter(f)
+              }}
+            />
 
             <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_380px]">
               <DocumentList
@@ -148,7 +186,10 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
                     doc={selected}
                     signing={signing}
                     signError={signError}
-                    onRequestSign={() => setConfirming(true)}
+                    onRequestSign={() => {
+                      track('sign_dialog_open')
+                      setConfirming(true)
+                    }}
                     onClose={() => setSelectedId(null)}
                   />
                 </div>
@@ -159,7 +200,11 @@ export default function App({ provider = defaultProvider, userEmail = null, onLo
       </main>
 
       {confirming && selected && (
-        <SignDialog doc={selected} onConfirm={() => void confirmSign()} onCancel={() => setConfirming(false)} />
+        <SignDialog
+          doc={selected}
+          onConfirm={() => void confirmSign()}
+          onCancel={() => setConfirming(false)}
+        />
       )}
     </div>
   )

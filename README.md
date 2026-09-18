@@ -17,13 +17,24 @@ npm run dev        # http://localhost:5173 — демо-режим на мок-�
 
 **С реальным бэкендом (ДЗ-5):** создайте проект Supabase, примените в SQL Editor по порядку обе миграции из `supabase/migrations/`, затем `cp .env.example .env.local`, впишите URL и publishable (anon) key проекта и перезапустите dev-сервер. Появится экран входа; **регистрация любого нового пользователя автоматически выдаёт демо-набор** (3 организации, 6 документов; в «Компании В» — роль без права подписи для проверки политики). Подробно: [backend_documentation.md](backend_documentation.md).
 
-Тестовые учётные записи (демо-база): `demo@docflow-test.ru` / `Demo12345!`, `reviewer@docflow-test.ru` / `Review12345!` — или зарегистрируйтесь: демо-набор создаётся автоматически.
+Тестовые учётные записи для проверки передаются вне репозитория (аудит безопасности, F-03) — либо просто зарегистрируйтесь: демо-набор создаётся автоматически.
 
-Проверка API без фронтенда: `SUPA=… ANON=… EMAIL=… PASS=… ./scripts/api-tests.sh` (10 запросов, включая негативные; пример вывода — [docs/api-tests-output.md](docs/api-tests-output.md)).
+Проверка API без фронтенда: заполните `.env.test.local` по образцу `.env.test.example` и выполните `set -a; source .env.test.local; set +a; ./scripts/api-tests.sh` — пароли не попадают в историю shell (10 запросов, включая негативные; пример вывода — [docs/api-tests-output.md](docs/api-tests-output.md)).
 
-Прочее: `npm test` — тесты (12), `npm run build` — production-сборка, `node scripts/screenshots.mjs` — скриншоты для отчёта (нужен запущенный dev-сервер и установленный Chrome).
+Прочее: `npm test` — тесты (26), `npm run ci` — полный набор проверок как в CI (линт, prettier, типы, тесты, сборка), `npm run build` — production-сборка, `node scripts/screenshots.mjs` — скриншоты для отчёта (нужен запущенный dev-сервер и установленный Chrome).
 
 **Демо-режимы:** `http://localhost:5173/?fail=1` — отказ провайдера (error-state с «Повторить»); документ «ООО «Крипто-Тест»» — гарантированная ошибка подписания.
+
+## CI/CD, интеграции, мониторинг (ДЗ-6)
+
+- **CI/CD:** GitHub Actions — линт, prettier, типы, тесты, аудит зависимостей, сборка → деплой на GitHub Pages при push в `main` (`.github/workflows/ci.yml`).
+- **OAuth2:** вход через Google (Supabase Auth, PKCE) — кнопка на экране входа.
+- **Аналитика:** Яндекс.Метрика, 12 событий воронки (`src/lib/analytics.ts`), включается переменной `VITE_YM_ID`.
+- **Мониторинг:** health-check `GET /rest/v1/rpc/health`, проверка каждые 30 минут (`.github/workflows/uptime.yml`) с алертом при падении.
+- **Логирование:** структурированные JSON-логи с уровнями, warn/error централизованно в таблице `client_logs`.
+- **Безопасность:** AI-аудит по OWASP, 12 находок, 11 исправлено — [security_audit.md](security_audit.md).
+
+Подробно: [integration_documentation.md](integration_documentation.md).
 
 ## Функции (по ТЗ)
 

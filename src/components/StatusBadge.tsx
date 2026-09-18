@@ -9,7 +9,9 @@ const STYLES: Record<DocStatus, { label: string; cls: string }> = {
 export function StatusBadge({ status }: { status: DocStatus }) {
   const s = STYLES[status]
   return (
-    <span className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${s.cls}`}>
+    <span
+      className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${s.cls}`}
+    >
       {s.label}
     </span>
   )

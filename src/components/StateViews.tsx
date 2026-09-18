@@ -1,6 +1,10 @@
 export function LoadingView() {
   return (
-    <div role="status" aria-label="Загрузка" className="flex flex-col items-center gap-3 rounded-2xl border bg-white p-16">
+    <div
+      role="status"
+      aria-label="Загрузка"
+      className="flex flex-col items-center gap-3 rounded-2xl border bg-white p-16"
+    >
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
       <p className="text-sm text-slate-500">Загружаем документы…</p>
     </div>

@@ -1,0 +1,40 @@
+# Мониторинг доступности (ДЗ-6, Шаг 6) без внешнего сервиса:
+# каждые 30 минут проверяем health-check бэкенда и фронтенд на Pages.
+# Падение job = письмо владельцу репозитория от GitHub (алерт) + красный статус.
+#
+# Переменные репозитория (Settings → Secrets and variables → Actions → Variables):
+#   HEALTH_URL — https://<ref>.supabase.co/rest/v1/rpc/health?apikey=<publishable-key>
+#   SITE_URL   — https://<owner>.github.io/<repo>/
+
+name: Uptime monitor
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Backend health (Supabase RPC)
+        if: vars.HEALTH_URL != ''
+        run: |
+          body=$(curl -sS --max-time 15 -w '\n%{http_code}' "${{ vars.HEALTH_URL }}")
+          code=$(echo "$body" | tail -1); json=$(echo "$body" | sed '$d')
+          echo "HTTP $code: $json"
+          test "$code" = "200" && echo "$json" | grep -q '"status": *"ok"'
+
+      - name: Frontend (GitHub Pages)
+        if: vars.SITE_URL != ''
+        run: |
+          code=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "${{ vars.SITE_URL }}")
+          echo "HTTP $code"; test "$code" = "200"
+
+      - name: Переменные не заданы
+        if: vars.HEALTH_URL == '' && vars.SITE_URL == ''
+        run: echo "::warning::Задайте HEALTH_URL и SITE_URL в Variables репозитория"

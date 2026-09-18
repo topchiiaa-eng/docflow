@@ -7,7 +7,9 @@ import { AuthGate } from './components/AuthGate.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthGate>
-      {({ userEmail, onLogout }) => <App userEmail={userEmail} onLogout={onLogout} />}
+      {({ userEmail, displayName, onLogout }) => (
+        <App userEmail={userEmail} displayName={displayName} onLogout={onLogout} />
+      )}
     </AuthGate>
   </StrictMode>,
 )

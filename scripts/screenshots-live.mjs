@@ -17,7 +17,12 @@ try {
     // отдельный контекст на каждый прогон: иначе вторая страница наследует сессию первой
     const ctx = await browser.createBrowserContext()
     const page = await ctx.newPage()
-    await page.setViewport({ width: view.w, height: view.h, isMobile: !!view.mobile, hasTouch: !!view.mobile })
+    await page.setViewport({
+      width: view.w,
+      height: view.h,
+      isMobile: !!view.mobile,
+      hasTouch: !!view.mobile,
+    })
     await page.goto(BASE, { waitUntil: 'networkidle0' })
 
     await page.waitForSelector('#email')

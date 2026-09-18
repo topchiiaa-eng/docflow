@@ -22,7 +22,10 @@ export function DetailPanel({ doc, signing, signError, onRequestSign, onClose }:
   const row = 'flex justify-between gap-4 border-b border-slate-100 py-2 text-sm'
 
   return (
-    <section aria-label="Карточка документа" className="flex h-full flex-col rounded-2xl border bg-white p-5 shadow-sm">
+    <section
+      aria-label="Карточка документа"
+      className="flex h-full flex-col rounded-2xl border bg-white p-5 shadow-sm"
+    >
       <div className="mb-3 flex items-start justify-between gap-2">
         <h2 className="text-base font-bold">{doc.title}</h2>
         <button
@@ -40,11 +43,26 @@ export function DetailPanel({ doc, signing, signError, onRequestSign, onClose }:
         Превью PDF (демо-режим)
       </div>
 
-      <div className={row}><span className="text-slate-500">Контрагент</span><b className="text-right">{doc.counterparty}</b></div>
-      <div className={row}><span className="text-slate-500">Получатель</span><b>{doc.org}</b></div>
-      <div className={row}><span className="text-slate-500">Сумма (без НДС)</span><b>{formatSum(doc.sum)}</b></div>
-      <div className={row}><span className="text-slate-500">Получен</span><b>{formatDate(doc.receivedAt)}</b></div>
-      <div className={row}><span className="text-slate-500">Статус</span><StatusBadge status={doc.status} /></div>
+      <div className={row}>
+        <span className="text-slate-500">Контрагент</span>
+        <b className="text-right">{doc.counterparty}</b>
+      </div>
+      <div className={row}>
+        <span className="text-slate-500">Получатель</span>
+        <b>{doc.org}</b>
+      </div>
+      <div className={row}>
+        <span className="text-slate-500">Сумма (без НДС)</span>
+        <b>{formatSum(doc.sum)}</b>
+      </div>
+      <div className={row}>
+        <span className="text-slate-500">Получен</span>
+        <b>{formatDate(doc.receivedAt)}</b>
+      </div>
+      <div className={row}>
+        <span className="text-slate-500">Статус</span>
+        <StatusBadge status={doc.status} />
+      </div>
 
       {doc.status === 'requires_signature' && (
         <div className="mt-auto pt-4">
@@ -62,7 +80,10 @@ export function DetailPanel({ doc, signing, signError, onRequestSign, onClose }:
       )}
 
       {signError && (
-        <div role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {signError}
         </div>
       )}
