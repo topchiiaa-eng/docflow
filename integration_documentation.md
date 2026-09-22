@@ -70,7 +70,15 @@
 2. Supabase → **Authentication → Sign In / Providers → Google** → включить, вставить Client ID и Secret → Save.
 3. Supabase → **Authentication → URL Configuration**: Site URL = `https://<owner>.github.io/docflow/`; Redirect URLs: тот же адрес + `http://localhost:5173/`.
 
-### 2.3. Тестирование
+### 2.3. Тестирование (факт, production-адрес)
+
+Провайдер включён (проверка `GET /auth/v1/settings` → `external.google: true`). Скрипт `scripts/e2e-oauth.mjs` на https://topchiiaa-eng.github.io/docflow/:
+
+- клик «Войти через Google» → переход на `accounts.google.com/v3/signin/identifier`, в запросе `redirect_uri=https://sfxjsknijnluvgymqizp.supabase.co/auth/v1/callback` — backend-часть flow (обмен кода) на стороне Supabase, скриншот `docs/screenshots/oauth-google-consent.png`;
+- возврат с `#error=access_denied` → на форме входа «Вход через Google отменён», hash очищен из адреса (`oauth-denied.png`);
+- `GET /auth/v1/authorize?provider=google` → HTTP 302 на Google с `response_type=code` (PKCE-flow).
+
+Полный вход с реальным Google-аккаунтом проверяется вручную (в шапке появляется имя из профиля и email).
 
 | Сценарий | Ожидание |
 |---|---|
