@@ -62,7 +62,7 @@ jobs:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_YM_ID: ${{ vars.VITE_YM_ID }}
+          VITE_YM_ID: ${{ vars.VITE_YM_ID || '112915794' }}  # номер счётчика публичный; Variables переопределяют
         run: npm run build
 
       - name: Отчёт о размере бандла
