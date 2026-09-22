@@ -38,6 +38,7 @@
 - **Репозиторий:** https://github.com/topchiiaa-eng/docflow · **Приложение:** https://topchiiaa-eng.github.io/docflow/
 - **Прогон 1** (первый push, [run 35698452896](https://github.com/topchiiaa-eng/docflow/actions/runs/35698452896)): job `quality` ✅ (линт, prettier, типы, 26 тестов, аудит, сборка), job `deploy` ✗ — GitHub Pages ещё не был включён в настройках репозитория. Ожидаемая и полезная ошибка: показала, что деплой действительно зависит от настройки Pages, а не молча «проходит».
 - **Прогон 2** (коммит с правкой README, [run 35700624692](https://github.com/topchiiaa-eng/docflow/actions/runs/35700624692)): `quality` ✅ → `deploy` ✅ → smoke-check `GET https://topchiiaa-eng.github.io/docflow/ → 200`. Скриншот: `docs/screenshots/ci-run.png`.
+- **Прогоны 4–5** (счётчик Метрики и CSP): job `quality` ✗ на шаге **prettier --check** — файлы `ci.yml` и `index.html` были отредактированы через `sed` в обход форматтера; деплой автоматически пропущен (`needs: quality`). Исправлено `prettier --write`, прогон 6 ([b987e3e](https://github.com/topchiiaa-eng/docflow/actions)) — ✅ quality → ✅ deploy. Показательный случай: проверка качества остановила публикацию неотформатированного кода, не дав ему попасть на сайт.
 - **Проверка после деплоя:** пути ассетов `/docflow/assets/…` корректны (base из `VITE_BASE_PATH`), meta-CSP на месте; вход тестовым пользователем на опубликованном сайте → лента с реальными данными Supabase (`docs/screenshots/live-desktop.png`, `live-mobile.png` сняты с production-адреса).
 
 ### 1.4. Альтернатива: Vercel
@@ -108,6 +109,8 @@
 **Счётчик:** № 112915794 (сайт `topchiiaa-eng.github.io/docflow/`, «принимать данные только с указанных адресов»). Номер задан в CI как значение по умолчанию (`vars.VITE_YM_ID || '112915794'`) — он публичный по природе, переопределяется через Variables.
 
 **Проверка отправки (факт):** скрипт `scripts/e2e-analytics.mjs` перехватывает сетевые запросы к `mc.yandex.ru` во время сценария «вход → открыть документ»: тег `tag.js` загружен, 13 запросов к Метрике, зафиксированы цели `login_password` и `document_open`, ошибок CSP нет. Первый прогон показал две блокировки CSP (websocket `wss://mc.yandex.ru/solid.ws` и служебный iframe Метрики) — события при этом доходили, но консоль была «грязной»; политика расширена директивами `wss://mc.yandex.ru` в `connect-src` и `frame-src https://mc.yandex.ru`. Это пример, как CSP из аудита безопасности и интеграция аналитики согласуются явно, а не «разрешить всё».
+
+**Production (после деплоя b987e3e):** тот же скрипт против `https://topchiiaa-eng.github.io/docflow/` — тег загружен, 12 запросов к `mc.yandex.ru`, цели `login_password` и `document_open` отправлены, ошибок CSP нет. В интерфейсе Метрики события видны в Отчёты → Конверсии (после создания целей с этими идентификаторами).
 
 **Проверка вручную:** DevTools → Network → фильтр `mc.yandex.ru` → при клике по документу уходит запрос `…/watch/<id>?…goal://…/document_open`; в Метрике — Отчёты → Конверсии (данные появляются с задержкой до нескольких минут).
 
