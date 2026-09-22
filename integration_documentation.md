@@ -33,9 +33,12 @@
 
 Без секретов пайплайн тоже зелёный — приложение собирается в демо-режиме на мок-данных (это проверено локально: `npm run ci` без `.env.local`).
 
-### 1.3. Проверка на тестовом коммите
+### 1.3. Проверка на тестовых коммитах (факт)
 
-Порядок: push → вкладка Actions → job `quality` (~1 мин) → job `deploy` → ссылка на окружение `github-pages` в summary. Результат первого прогона фиксируется скриншотом в `docs/screenshots/ci-run.png` после публикации репозитория.
+- **Репозиторий:** https://github.com/topchiiaa-eng/docflow · **Приложение:** https://topchiiaa-eng.github.io/docflow/
+- **Прогон 1** (первый push, [run 35698452896](https://github.com/topchiiaa-eng/docflow/actions/runs/35698452896)): job `quality` ✅ (линт, prettier, типы, 26 тестов, аудит, сборка), job `deploy` ✗ — GitHub Pages ещё не был включён в настройках репозитория. Ожидаемая и полезная ошибка: показала, что деплой действительно зависит от настройки Pages, а не молча «проходит».
+- **Прогон 2** (коммит с правкой README, [run 35700624692](https://github.com/topchiiaa-eng/docflow/actions/runs/35700624692)): `quality` ✅ → `deploy` ✅ → smoke-check `GET https://topchiiaa-eng.github.io/docflow/ → 200`. Скриншот: `docs/screenshots/ci-run.png`.
+- **Проверка после деплоя:** пути ассетов `/docflow/assets/…` корректны (base из `VITE_BASE_PATH`), meta-CSP на месте; вход тестовым пользователем на опубликованном сайте → лента с реальными данными Supabase (`docs/screenshots/live-desktop.png`, `live-mobile.png` сняты с production-адреса).
 
 ### 1.4. Альтернатива: Vercel
 
@@ -104,8 +107,11 @@
 
 ```
 GET https://sfxjsknijnluvgymqizp.supabase.co/rest/v1/rpc/health?apikey=<publishable-key>
-→ {"status":"ok","service":"docflow-db","time":"…","checks":{"database":"ok","documents_total":N,"auth_users_reachable":true}}
+→ HTTP 200 {"status":"ok","service":"docflow-db","time":"2026-09-22T06:43:04Z",
+            "checks":{"database":"ok","documents_total":12,"auth_users_reachable":true}}   ← реальный ответ после миграции 3
 ```
+
+Проверки безопасности после миграции 3 (факт): анонимный `GET /rest/v1/documents` → **401** (было 200 с пустым списком); `POST /rpc/seed_demo_data` под пользователем → **403 permission denied for function**.
 
 Проверяет: доступность PostgreSQL (сам факт ответа), таблицу `documents` (RLS/права), схему `auth`. Не отдаёт ничего чувствительного — только счётчик.
 
