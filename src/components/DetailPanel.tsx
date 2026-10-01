@@ -6,11 +6,26 @@ interface Props {
   doc: DocumentItem | null
   signing: boolean
   signError: string | null
+  /** Текущий пользователь — владелец организации документа (может удалять) */
+  canDelete: boolean
+  fileBusy: boolean
   onRequestSign: () => void
+  onOpenFile: () => void
+  onRequestDelete: () => void
   onClose: () => void
 }
 
-export function DetailPanel({ doc, signing, signError, onRequestSign, onClose }: Props) {
+export function DetailPanel({
+  doc,
+  signing,
+  signError,
+  canDelete,
+  fileBusy,
+  onRequestSign,
+  onOpenFile,
+  onRequestDelete,
+  onClose,
+}: Props) {
   if (!doc) {
     return (
       <div className="hidden h-full items-center justify-center rounded-2xl border bg-white p-8 text-sm text-slate-400 lg:flex">
@@ -37,10 +52,20 @@ export function DetailPanel({ doc, signing, signError, onRequestSign, onClose }:
         </button>
       </div>
 
-      {/* PDF-превью: в демо-режиме мок-провайдер файлов не отдаёт (ТЗ, F-7) */}
+      {/* Файл: PDF из хранилища (временная ссылка) либо плейсхолдер */}
       <div className="mb-4 flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-slate-100 text-xs text-slate-500">
         <span className="text-2xl">📄</span>
-        Превью PDF (демо-режим)
+        {doc.filePath ? (
+          <button
+            onClick={onOpenFile}
+            disabled={fileBusy}
+            className="rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60"
+          >
+            {fileBusy ? 'Получаем ссылку…' : 'Открыть PDF'}
+          </button>
+        ) : (
+          'PDF не приложен'
+        )}
       </div>
 
       <div className={row}>
@@ -86,6 +111,15 @@ export function DetailPanel({ doc, signing, signError, onRequestSign, onClose }:
         >
           {signError}
         </div>
+      )}
+
+      {canDelete && doc.status !== 'signed' && (
+        <button
+          onClick={onRequestDelete}
+          className="mt-3 self-end text-xs font-semibold text-red-600 hover:underline"
+        >
+          Удалить документ
+        </button>
       )}
     </section>
   )

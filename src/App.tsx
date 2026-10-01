@@ -1,27 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { DocFilter, DocumentItem, EdoProvider } from './types'
-import { provider as appProvider, isDemo } from './api'
-import { log } from './lib/logger'
-import { track } from './lib/analytics'
-import { filterDocuments } from './lib/documents'
-import { KpiTiles } from './components/KpiTiles'
-import { FiltersBar } from './components/FiltersBar'
-import { DocumentList } from './components/DocumentList'
-import { DetailPanel } from './components/DetailPanel'
-import { SignDialog } from './components/SignDialog'
-import { ErrorView, LoadingView } from './components/StateViews'
-
-const EMPTY_FILTER: DocFilter = { org: 'all', status: 'all', query: '' }
-// Стабильная ссылка для «нет данных»: новый [] на каждый рендер сбрасывал бы useMemo
-const NO_DOCS: DocumentItem[] = []
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import type { EdoProvider } from './types'
+import { provider as appProvider } from './api'
+import { Layout } from './components/Layout'
+import { InboxPage } from './pages/InboxPage'
+import { JournalPage } from './pages/JournalPage'
+import { OrganizationsPage } from './pages/OrganizationsPage'
 
 // Единственный экземпляр на модуль (из src/api): дефолт, создающий провайдер
 // в параметрах компонента, порождал бы НОВЫЙ объект на каждый рендер и через
-// useCallback([provider]) зацикливал загрузку (баг, найденный по логам консоли).
+// зависимости эффектов зацикливал загрузку (баг, найденный по логам консоли в ДЗ-4).
 const defaultProvider = appProvider
-
-type LoadState =
-  { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; docs: DocumentItem[] }
 
 interface AppProps {
   provider?: EdoProvider
@@ -30,182 +18,27 @@ interface AppProps {
   onLogout?: (() => void) | null
 }
 
+/**
+ * Корень приложения: HashRouter (GitHub Pages не умеет SPA-fallback для
+ * history-роутинга) + 4 экрана внутри общего каркаса.
+ */
 export default function App({
   provider = defaultProvider,
   userEmail = null,
   displayName = null,
   onLogout = null,
 }: AppProps) {
-  const [state, setState] = useState<LoadState>({ kind: 'loading' })
-  const [filter, setFilter] = useState<DocFilter>(EMPTY_FILTER)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [confirming, setConfirming] = useState(false)
-  const [signing, setSigning] = useState(false)
-  const [signError, setSignError] = useState<string | null>(null)
-
-  // Загрузка привязана к счётчику попыток: «Повторить» переводит экран в loading
-  // в обработчике клика и инкрементирует attempt; сам эффект меняет состояние
-  // только асинхронно и игнорирует устаревшие ответы (защита от гонки).
-  const [attempt, setAttempt] = useState(0)
-  useEffect(() => {
-    let cancelled = false
-    provider
-      .listIncoming()
-      .then((docs) => {
-        if (!cancelled) setState({ kind: 'ready', docs })
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return
-        log.error('documents.load_failed', { message: e instanceof Error ? e.message : String(e) })
-        setState({ kind: 'error', message: e instanceof Error ? e.message : 'Неизвестная ошибка' })
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [provider, attempt])
-
-  const retry = () => {
-    setState({ kind: 'loading' })
-    setAttempt((a) => a + 1)
-  }
-
-  const docs = state.kind === 'ready' ? state.docs : NO_DOCS
-  const orgs = useMemo(() => [...new Set(docs.map((d) => d.org))], [docs])
-  const visible = useMemo(() => filterDocuments(docs, filter), [docs, filter])
-  const selected = docs.find((d) => d.id === selectedId) ?? null
-
-  const openDoc = (id: string) => {
-    setSelectedId(id)
-    setSignError(null)
-    // открытие карточки помечает документ прочитанным (US-3) — локально и на сервере
-    setState((s) =>
-      s.kind === 'ready'
-        ? { kind: 'ready', docs: s.docs.map((d) => (d.id === id ? { ...d, unread: false } : d)) }
-        : s,
-    )
-    track('document_open')
-    provider
-      .markRead?.(id)
-      .catch((e: unknown) => log.warn('document.mark_read_failed', { id, message: String(e) }))
-  }
-
-  // Подписание — только после подтверждения в диалоге (правило 8 CLAUDE.md)
-  const confirmSign = async () => {
-    if (!selected) return
-    setConfirming(false)
-    setSigning(true)
-    setSignError(null)
-    track('sign_confirm')
-    try {
-      await provider.sign(selected.id)
-      log.info('document.signed', { id: selected.id })
-      track('sign_success')
-      setState((s) =>
-        s.kind === 'ready'
-          ? {
-              kind: 'ready',
-              docs: s.docs.map((d) => (d.id === selected.id ? { ...d, status: 'signed' as const } : d)),
-            }
-          : s,
-      )
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Не удалось подписать документ'
-      log.warn('document.sign_denied', { id: selected.id, message })
-      track('sign_denied')
-      setSignError(message)
-    } finally {
-      setSigning(false)
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <span className="text-lg font-extrabold">
-            Док<span className="text-emerald-600">Поток</span>
-          </span>
-          <span className="hidden text-xs text-slate-400 sm:inline">
-            {isDemo ? 'единая входящая ЭДО · демо-режим (мок-провайдер)' : 'единая входящая ЭДО'}
-          </span>
-          {userEmail && (
-            <span className="ml-auto flex items-center gap-2 text-xs text-slate-500">
-              <span className="hidden sm:inline">
-                {displayName ? `${displayName} · ` : ''}
-                {userEmail}
-              </span>
-              {onLogout && (
-                <button
-                  onClick={onLogout}
-                  className="rounded-lg border border-slate-300 px-2.5 py-1 font-semibold hover:bg-slate-50"
-                >
-                  Выйти
-                </button>
-              )}
-            </span>
-          )}
-        </div>
-      </header>
-
-      <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5">
-        {state.kind === 'loading' && <LoadingView />}
-        {state.kind === 'error' && <ErrorView message={state.message} onRetry={retry} />}
-
-        {state.kind === 'ready' && (
-          <>
-            <KpiTiles docs={docs} />
-            <FiltersBar
-              filter={filter}
-              orgs={orgs}
-              onChange={(f) => {
-                if (f.query !== filter.query) track('search')
-                else track('filter_change')
-                setFilter(f)
-              }}
-            />
-
-            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_380px]">
-              <DocumentList
-                docs={visible}
-                selectedId={selectedId}
-                onSelect={openDoc}
-                onResetFilters={() => setFilter(EMPTY_FILTER)}
-              />
-
-              {/* Десктоп: панель справа; мобильные/планшет: выезжающая поверх (ТЗ, совместимость) */}
-              <div
-                className={
-                  selected
-                    ? 'fixed inset-0 z-40 bg-slate-900/30 p-3 pt-14 lg:static lg:z-auto lg:bg-transparent lg:p-0 lg:pt-0'
-                    : 'hidden lg:block'
-                }
-                onClick={() => setSelectedId(null)}
-              >
-                <div className="mx-auto h-full max-w-md lg:max-w-none" onClick={(e) => e.stopPropagation()}>
-                  <DetailPanel
-                    doc={selected}
-                    signing={signing}
-                    signError={signError}
-                    onRequestSign={() => {
-                      track('sign_dialog_open')
-                      setConfirming(true)
-                    }}
-                    onClose={() => setSelectedId(null)}
-                  />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </main>
-
-      {confirming && selected && (
-        <SignDialog
-          doc={selected}
-          onConfirm={() => void confirmSign()}
-          onCancel={() => setConfirming(false)}
-        />
-      )}
-    </div>
+    <HashRouter>
+      <Routes>
+        <Route element={<Layout userEmail={userEmail} displayName={displayName} onLogout={onLogout} />}>
+          <Route index element={<InboxPage provider={provider} mode="inbox" />} />
+          <Route path="sign" element={<InboxPage provider={provider} mode="sign" />} />
+          <Route path="journal" element={<JournalPage provider={provider} />} />
+          <Route path="organizations" element={<OrganizationsPage provider={provider} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </HashRouter>
   )
 }

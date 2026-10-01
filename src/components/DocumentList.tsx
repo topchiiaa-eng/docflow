@@ -7,13 +7,14 @@ interface Props {
   selectedId: string | null
   onSelect: (id: string) => void
   onResetFilters: () => void
+  emptyText?: string
 }
 
-export function DocumentList({ docs, selectedId, onSelect, onResetFilters }: Props) {
+export function DocumentList({ docs, selectedId, onSelect, onResetFilters, emptyText }: Props) {
   if (docs.length === 0) {
     return (
       <div className="rounded-2xl border bg-white p-10 text-center">
-        <p className="text-slate-600">Ничего не найдено</p>
+        <p className="text-slate-600">{emptyText ?? 'Ничего не найдено'}</p>
         <button
           onClick={onResetFilters}
           className="mt-3 rounded-lg border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"

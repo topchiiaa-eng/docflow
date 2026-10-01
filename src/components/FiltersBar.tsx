@@ -3,13 +3,15 @@ import type { DocFilter, DocStatus } from '../types'
 interface Props {
   filter: DocFilter
   orgs: string[]
+  /** На экране «На подпись» статус зафиксирован — селектор скрыт */
+  hideStatus?: boolean
   onChange: (f: DocFilter) => void
 }
 
 const input =
   'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none'
 
-export function FiltersBar({ filter, orgs, onChange }: Props) {
+export function FiltersBar({ filter, orgs, hideStatus, onChange }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <label className="sr-only" htmlFor="f-org">
@@ -29,20 +31,24 @@ export function FiltersBar({ filter, orgs, onChange }: Props) {
         ))}
       </select>
 
-      <label className="sr-only" htmlFor="f-status">
-        Статус
-      </label>
-      <select
-        id="f-status"
-        className={input}
-        value={filter.status}
-        onChange={(e) => onChange({ ...filter, status: e.target.value as DocStatus | 'all' })}
-      >
-        <option value="all">Все статусы</option>
-        <option value="requires_signature">Требуется подпись</option>
-        <option value="signed">Подписан</option>
-        <option value="info">Не требует подписи</option>
-      </select>
+      {!hideStatus && (
+        <>
+          <label className="sr-only" htmlFor="f-status">
+            Статус
+          </label>
+          <select
+            id="f-status"
+            className={input}
+            value={filter.status}
+            onChange={(e) => onChange({ ...filter, status: e.target.value as DocStatus | 'all' })}
+          >
+            <option value="all">Все статусы</option>
+            <option value="requires_signature">Требуется подпись</option>
+            <option value="signed">Подписан</option>
+            <option value="info">Не требует подписи</option>
+          </select>
+        </>
+      )}
 
       <input
         type="search"

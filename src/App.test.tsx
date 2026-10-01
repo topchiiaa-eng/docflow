@@ -2,21 +2,21 @@ import { describe, expect, it } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
-import { FIXTURES } from './mocks/fixtures'
-import type { DocumentItem, EdoProvider } from './types'
+import { createMockProvider } from './api/mockProvider'
+import type { EdoProvider } from './types'
 
-/** Тестовый провайдер: без задержек, с управляемыми отказами */
+/** Тестовый провайдер: мок без задержек + управляемые отказы */
 function testProvider(opts: { failList?: boolean; failSignIds?: string[] } = {}): EdoProvider {
-  const docs: DocumentItem[] = structuredClone(FIXTURES)
+  const base = createMockProvider(0)
   return {
+    ...base,
     async listIncoming() {
       if (opts.failList) throw new Error('провайдер недоступен')
-      return structuredClone(docs)
+      return base.listIncoming()
     },
     async sign(id: string) {
       if (opts.failSignIds?.includes(id)) throw new Error('сертификат ящика недоступен')
-      const d = docs.find((x) => x.id === id)
-      if (d) d.status = 'signed'
+      return base.sign(id)
     },
   }
 }

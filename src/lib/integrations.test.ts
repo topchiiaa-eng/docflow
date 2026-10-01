@@ -42,7 +42,7 @@ describe('analytics (Яндекс.Метрика, Шаг 4)', () => {
   beforeEach(() => _resetAnalytics())
 
   it('без счётчика — no-op, ничего не ломается', () => {
-    expect(initAnalytics(undefined)).toBe(false)
+    expect(initAnalytics('')).toBe(false) // '' = счётчик не задан (undefined означал бы «взять из env»)
     expect(track('document_open')).toBe(false)
   })
 

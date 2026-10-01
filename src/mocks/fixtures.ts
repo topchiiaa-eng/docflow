@@ -1,9 +1,17 @@
-import type { DocumentItem } from '../types'
+import type { DocumentItem, Organization } from '../types'
+
+/** Демо-организации: в А и Б пользователь — владелец-подписант, в В — оператор (нет права подписи) */
+export const ORG_FIXTURES: Organization[] = [
+  { id: '00000000-0000-4000-8000-00000000000a', name: 'Компания А', isOwner: true, role: 'signer' },
+  { id: '00000000-0000-4000-8000-00000000000b', name: 'Компания Б', isOwner: true, role: 'signer' },
+  { id: '00000000-0000-4000-8000-00000000000c', name: 'Компания В', isOwner: false, role: 'operator' },
+]
 
 /** Демо-данные трёх организаций; doc-fail — документ с гарантированной ошибкой подписания (F-7) */
 export const FIXTURES: DocumentItem[] = [
   {
     id: 'doc-1',
+    orgId: '00000000-0000-4000-8000-00000000000a',
     org: 'Компания А',
     counterparty: 'ООО «ГетБлоггер»',
     title: 'УПД № 260810/54',
@@ -12,9 +20,11 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-25T09:41:00',
     status: 'requires_signature',
     unread: true,
+    filePath: null,
   },
   {
     id: 'doc-2',
+    orgId: '00000000-0000-4000-8000-00000000000b',
     org: 'Компания Б',
     counterparty: 'ООО «ВебсайтСофт»',
     title: 'Акт сверки № 809',
@@ -23,9 +33,11 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-25T08:15:00',
     status: 'requires_signature',
     unread: true,
+    filePath: null,
   },
   {
     id: 'doc-fail',
+    orgId: '00000000-0000-4000-8000-00000000000c',
     org: 'Компания В',
     counterparty: 'ООО «Крипто-Тест»',
     title: 'УПД № 4451/2',
@@ -34,9 +46,11 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-25T07:58:00',
     status: 'requires_signature',
     unread: true,
+    filePath: null,
   },
   {
     id: 'doc-3',
+    orgId: '00000000-0000-4000-8000-00000000000c',
     org: 'Компания В',
     counterparty: 'АО «ПФ «СКБ Контур»',
     title: 'Счёт № 31958300',
@@ -45,9 +59,11 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-24T17:03:00',
     status: 'info',
     unread: false,
+    filePath: null,
   },
   {
     id: 'doc-4',
+    orgId: '00000000-0000-4000-8000-00000000000a',
     org: 'Компания А',
     counterparty: 'ООО «Аренда-Сервис»',
     title: 'Акт № 31 от 31.07',
@@ -56,9 +72,11 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-24T16:20:00',
     status: 'signed',
     unread: false,
+    filePath: null,
   },
   {
     id: 'doc-5',
+    orgId: '00000000-0000-4000-8000-00000000000b',
     org: 'Компания Б',
     counterparty: 'ООО «Клауд Хостинг»',
     title: 'УПД № 8807/2',
@@ -67,9 +85,11 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-23T11:36:00',
     status: 'signed',
     unread: false,
+    filePath: null,
   },
   {
     id: 'doc-6',
+    orgId: '00000000-0000-4000-8000-00000000000a',
     org: 'Компания А',
     counterparty: 'ООО «Праздник-Кейтеринг»',
     title: 'Договор № 77-К',
@@ -78,9 +98,11 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-22T14:12:00',
     status: 'info',
     unread: false,
+    filePath: null,
   },
   {
     id: 'doc-7',
+    orgId: '00000000-0000-4000-8000-00000000000c',
     org: 'Компания В',
     counterparty: 'ООО «Точка Роста»',
     title: 'Счёт № 1188',
@@ -89,5 +111,6 @@ export const FIXTURES: DocumentItem[] = [
     receivedAt: '2026-08-21T10:05:00',
     status: 'signed',
     unread: false,
+    filePath: null,
   },
 ]

@@ -10,6 +10,8 @@ export type AnalyticsEvent =
   | 'signup'
   | 'logout'
   | 'document_open'
+  | 'document_create'
+  | 'org_create'
   | 'filter_change'
   | 'search'
   | 'sign_dialog_open'
