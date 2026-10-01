@@ -39,10 +39,16 @@ Frontend (React, Vite)                 Supabase
 | `org_members` | org_id, user_id, **role** (operator / signer / accountant) | organizations ↔ auth.users (M:N) |
 | `documents` | id, org_id, counterparty, title, kind, sum, received_at, status, unread | → organizations |
 | `sign_attempts` | id, document_id, user_id, attempted_at, success, detail | → documents, auth.users; **append-only** |
+| `client_logs` | id, ts, level, event, context, user_id, ua | → auth.users; клиентские warn/error (миграция 3) |
+| `storage.objects` (bucket `documents`) | путь `<org_id>/<document_id>.pdf` | политики по членству в организации (миграция 4) |
+
+Проектная работа добавила: `organizations.created_by` (владелец), `documents.file_path` и `documents.created_by`, check-constraints на длины/суммы, RLS-политики insert/update/delete для владельцев и участников.
 
 Миграции (применять по порядку):
 1. [20260916000000_init.sql](supabase/migrations/20260916000000_init.sql) — таблицы → права колонок → RLS → RPC → сидинг демо-данных (`seed_demo_data`) + триггер на регистрацию.
 2. [20260916000100_sign_document_journal_fix.sql](supabase/migrations/20260916000100_sign_document_journal_fix.sql) — `sign_document` возвращает `{ok, error, document}` вместо исключения (см. раздел 7: баг, найденный API-тестами).
+3. [20260918000000_security_health_logs.sql](supabase/migrations/20260918000000_security_health_logs.sql) — исправления аудита безопасности (revoke служебных функций, права колонок, FK), `health()` для мониторинга, таблица `client_logs`.
+4. [20261001000000_project_crud_storage.sql](supabase/migrations/20261001000000_project_crud_storage.sql) — владелец организации и CRUD, участники по email (`add_member_by_email`, `list_members`), ручное добавление/удаление документов с валидацией, Storage-bucket `documents` с политиками.
 
 ## 3. Развёртывание (Шаг 3)
 
@@ -64,7 +70,12 @@ REST API генерируется PostgREST автоматически из сх
 | Пометить прочитанным | `PATCH /rest/v1/documents?id=eq.<uuid>` тело `{"unread": false}` | Update |
 | Подписать (только через RPC) | `POST /rest/v1/rpc/sign_document` тело `{"doc_id": "<uuid>"}` | Update + Insert (журнал) |
 | Журнал подписаний | `GET /rest/v1/sign_attempts?select=*` | Read |
-| Регистрация / вход | `POST /auth/v1/signup`, `POST /auth/v1/token?grant_type=password` | — |
+| Добавить документ | `POST /rest/v1/documents` (org_id, counterparty, title, kind, sum, status, created_by) | Create |
+| Удалить документ | `DELETE /rest/v1/documents?id=eq.<uuid>` (владелец, не подписан) | Delete |
+| Загрузить / получить PDF | `POST /storage/v1/object/documents/<org>/<doc>.pdf`, `POST /storage/v1/object/sign/documents/…` (временная ссылка) | Create / Read |
+| Организации | `GET/POST/PATCH/DELETE /rest/v1/organizations` (владелец) | полный CRUD |
+| Участники | `POST /rest/v1/rpc/list_members`, `POST /rest/v1/rpc/add_member_by_email`, `DELETE /rest/v1/org_members?…` | Read / Create / Delete |
+| Регистрация / вход | `POST /auth/v1/signup`, `POST /auth/v1/token?grant_type=password`, OAuth Google через `/auth/v1/authorize` | — |
 
 ### Примеры запросов (curl)
 
