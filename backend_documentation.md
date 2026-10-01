@@ -50,6 +50,7 @@ Frontend (React, Vite)                 Supabase
 3. [20260918000000_security_health_logs.sql](supabase/migrations/20260918000000_security_health_logs.sql) — исправления аудита безопасности (revoke служебных функций, права колонок, FK), `health()` для мониторинга, таблица `client_logs`.
 4. [20261001000000_project_crud_storage.sql](supabase/migrations/20261001000000_project_crud_storage.sql) — владелец организации и CRUD, участники по email (`add_member_by_email`, `list_members`), ручное добавление/удаление документов с валидацией, Storage-bucket `documents` с политиками.
 5. [20261001000100_owner_select_policy.sql](supabase/migrations/20261001000100_owner_select_policy.sql) — SELECT-политика владельца: `INSERT … RETURNING` под RLS проверяется до AFTER-триггера членства (кейс найден e2e на живой базе).
+6. [20261001000200_seed_owner_fix.sql](supabase/migrations/20261001000200_seed_owner_fix.sql) — сидинг демо-данных с владельцем организаций; триггер владельца терпим к `NULL`; досев пользователей, зарегистрированных в период поломки.
 
 ## 3. Развёртывание (Шаг 3)
 

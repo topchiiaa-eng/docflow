@@ -48,7 +48,7 @@ npm install
 npm run dev          # http://localhost:5173 — демо-режим на мок-данных, бэкенд не нужен
 ```
 
-**С бэкендом Supabase:** создайте проект на supabase.com, примените по порядку 5 миграций из `supabase/migrations/` (SQL Editor), включите провайдер Google (по желанию), затем `cp .env.example .env.local` → впишите Project URL и publishable key → перезапустите dev-сервер. Регистрация любого пользователя автоматически создаёт демо-набор (3 организации, 6 документов). Подробно: [backend_documentation.md](backend_documentation.md).
+**С бэкендом Supabase:** создайте проект на supabase.com, примените по порядку 6 миграций из `supabase/migrations/` (SQL Editor), включите провайдер Google (по желанию), затем `cp .env.example .env.local` → впишите Project URL и publishable key → перезапустите dev-сервер. Регистрация любого пользователя автоматически создаёт демо-набор (3 организации, 6 документов). Подробно: [backend_documentation.md](backend_documentation.md).
 
 **Проверки:** `npm run ci` — всё как в CI (линт, prettier, типы, тесты, сборка) · `npm test` — 43 теста · `./scripts/api-tests.sh` — 10 запросов к живому API (учётные данные из `.env.test.local`, см. `.env.test.example`) · `node scripts/e2e-sign.mjs` — e2e подписания.
 
@@ -63,7 +63,7 @@ src/
 ├── lib/            documents.ts (фильтры, KPI) · validation.ts · logger.ts · analytics.ts · auth.ts (+ тесты)
 ├── types.ts        модель данных и интерфейс EdoProvider
 └── App.tsx         HashRouter + маршруты
-supabase/migrations/   5 миграций (схема, RLS, RPC, Storage)
+supabase/migrations/   6 миграций (схема, RLS, RPC, Storage)
 .github/workflows/     ci.yml (CI/CD → Pages) · uptime.yml (мониторинг)
 scripts/               api-tests.sh · e2e-*.mjs · screenshots*.mjs · logs-export.sh
 docs/                  development_process.md · competitors.md · api-tests-output.md · screenshots/
