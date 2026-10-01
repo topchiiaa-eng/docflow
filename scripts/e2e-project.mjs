@@ -48,7 +48,7 @@ try {
     await card.waitForSelector('text/' + EMAIL)
     await (await card.$('input[type=email]')).type(EMAIL2)
     await (await card.waitForSelector('text/Добавить')).click()
-    await card.waitForSelector('text/' + EMAIL2)
+    await card.waitForSelector(`li ::-p-text(${EMAIL2})`) // именно в списке участников, не в поле ввода
     console.log('2) участник добавлен:', EMAIL2)
   }
   await page.screenshot({ path: `${OUT}/live-organizations.png` })
