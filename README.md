@@ -71,6 +71,7 @@ docs/                  development_process.md · competitors.md · api-tests-out
 
 ## Документация
 
+- [docs/agentic_engineering.md](docs/agentic_engineering.md) — **как управляли AI**: архитектурные решения, принципы CI/CD, «подписание через явное подтверждение», отличие от вайбкодинга со ссылками на следы в репозитории
 - [docs/development_process.md](docs/development_process.md) — использование AI на каждом этапе, промпты, проблемы и решения, выводы
 - [docs/competitors.md](docs/competitors.md) — анализ конкурентов (AI + веб-поиск)
 - [backend_documentation.md](backend_documentation.md) — архитектура, схема БД, API, развёртывание

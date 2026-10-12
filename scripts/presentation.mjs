@@ -17,6 +17,12 @@ const W = 13.33
 const SHOT = (f) => `docs/screenshots/${f}`
 
 const pres = new pptxgen()
+const TOTAL = 16
+let slideNo = 0
+const newSlide = () => {
+  slideNo++
+  return pres.addSlide()
+}
 pres.layout = 'LAYOUT_WIDE'
 pres.title = 'ДокПоток — защита проекта'
 
@@ -87,8 +93,8 @@ const card = (slide, x, y, w, h, head, text, accent = C.emerald) => {
     valign: 'top',
   })
 }
-const foot = (slide, n) =>
-  slide.addText(`ДокПоток · защита проекта · ${n}/12`, {
+const foot = (slide) =>
+  slide.addText(`ДокПоток · защита проекта · ${slideNo}/${TOTAL}`, {
     x: 0.6,
     y: 7.0,
     w: 6,
@@ -102,7 +108,7 @@ const foot = (slide, n) =>
 
 // 1. Титул
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.ink }
   s.addText(
     [
@@ -152,7 +158,7 @@ const foot = (slide, n) =>
 
 // 2. Проблема
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.white }
   title(s, 'Проблема: один менеджер — N ящиков ЭДО')
   s.addText('20–30', {
@@ -242,7 +248,7 @@ const foot = (slide, n) =>
     'Один экран на все организации: лента, очередь «на подпись» с явным подтверждением, журнал, роли',
     C.ink,
   )
-  foot(s, 2)
+  foot(s)
   s.addNotes(
     'Боль измерена на себе: три юрлица, каждое утро — обход трёх ящиков. Документы «требуется подпись» терялись между ящиками.',
   )
@@ -250,7 +256,7 @@ const foot = (slide, n) =>
 
 // 3. Конкуренты
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.light }
   title(s, 'Конкуренты: «несколько юрлиц» = переключатель, а не лента')
   const rows = [
@@ -314,7 +320,7 @@ const foot = (slide, n) =>
       italic: true,
     },
   )
-  foot(s, 3)
+  foot(s)
   s.addNotes(
     'Анализ сделал субагент с веб-поиском. Главный вывод: у провайдеров мультиорганизационность — это переключатель, единой ленты нет. Ниша подтверждена.',
   )
@@ -322,7 +328,7 @@ const foot = (slide, n) =>
 
 // 4. Решение и экраны
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.white }
   title(s, 'Решение: четыре экрана + вход')
   s.addImage({ path: SHOT('live-desktop.png'), x: 0.6, y: 1.45, w: 7.4, h: 4.16 })
@@ -395,13 +401,13 @@ const foot = (slide, n) =>
       margin: 0,
     },
   )
-  foot(s, 4)
+  foot(s)
   s.addNotes('Живой скриншот production. Четыре экрана с роутингом, вход по паролю или через Google.')
 }
 
 // 5. Демо: организации и журнал
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.light }
   title(s, 'Организации и журнал подписаний')
   s.addImage({ path: SHOT('live-organizations.png'), x: 0.6, y: 1.45, w: 6.0, h: 3.375 })
@@ -434,12 +440,12 @@ const foot = (slide, n) =>
       margin: 0,
     },
   )
-  foot(s, 5)
+  foot(s)
 }
 
 // 6. Архитектура
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.white }
   title(s, 'Архитектура')
   const box = (x, y, w, h, head, lines, fill = C.white, color = C.ink) => {
@@ -558,12 +564,81 @@ const foot = (slide, n) =>
       italic: true,
     },
   )
-  foot(s, 6)
+  foot(s)
+}
+
+// 6a. Архитектура: почему именно так
+{
+  const s = newSlide()
+  s.background = { color: C.light }
+  title(s, 'Архитектура: почему именно так')
+  const rows = [
+    [
+      { text: 'Решение', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+      { text: 'Альтернатива', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+      { text: 'Почему', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+    ],
+    [
+      'Supabase вместо своего сервера',
+      'Node/Express + Postgres в Docker на VPS',
+      'Нет прав администратора → нет Docker; нет VPS. Auth, RLS, REST — без собственного сервера',
+    ],
+    [
+      'Безопасность в БД, а не в middleware',
+      'Проверки прав в API-слое',
+      'Без своего сервера единственная граница доверия — PostgreSQL: RLS, права колонок, security definer RPC',
+    ],
+    [
+      'Интерфейс EdoProvider',
+      'Прямые вызовы supabase-js из компонентов',
+      'Мок → тесты и CI без секретов; бэкенд подключён без правки компонентов; ответ на риск зависимости от одного провайдера',
+    ],
+    [
+      'GitHub Pages + HashRouter',
+      'Vercel/Netlify + BrowserRouter',
+      'Без второго аккаунта и токенов (OIDC); цена — нет SPA-fallback → hash-роутинг, решение задокументировано в App.tsx',
+    ],
+    [
+      'Чистая логика вне React (src/lib)',
+      'Логика внутри компонентов',
+      'Правило 3 CLAUDE.md: фильтры, валидация, разбор OAuth-ошибок тестируются юнитами без DOM',
+    ],
+  ]
+  s.addTable(rows, {
+    x: 0.6,
+    y: 1.45,
+    w: W - 1.2,
+    colW: [3.0, 3.3, 5.83],
+    rowH: 0.7,
+    fontFace: FONT,
+    fontSize: 11.5,
+    color: C.ink,
+    border: { type: 'solid', color: C.line, pt: 0.75 },
+    fill: { color: C.white },
+    valign: 'middle',
+    margin: 0.08,
+  })
+  s.addText(
+    'Метод из ДЗ-1: сначала отсечь по жёстким ограничениям, потом сравнивать. Решения принимал человек; агент предлагал варианты и аргументы. Подробно: docs/agentic_engineering.md §1',
+    {
+      x: 0.6,
+      y: 6.0,
+      w: W - 1.2,
+      h: 0.7,
+      fontFace: FONT,
+      fontSize: 12.5,
+      color: C.slate,
+      isTextBox: true,
+      margin: 0,
+      italic: true,
+    },
+  )
+  foot(s)
 }
 
 // 7. Данные и безопасность
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.light }
   title(s, 'Данные и безопасность')
   const t = [
@@ -643,12 +718,113 @@ const foot = (slide, n) =>
       margin: 0,
     },
   )
-  foot(s, 7)
+  foot(s)
+}
+
+// 7a. Подписание только через явное подтверждение
+{
+  const s = newSlide()
+  s.background = { color: C.white }
+  title(s, 'Что значит «подписание только через явное подтверждение»')
+  const layers = [
+    [
+      '1 · UI',
+      'Кнопка «Утвердить и подписать» не подписывает — открывает диалог с документом, контрагентом, суммой и подписантом. provider.sign() вызывает только «Подтвердить».',
+      'CLAUDE.md, правило 8; тест «Отмена не меняет статус»',
+      C.emerald,
+    ],
+    [
+      '2 · Данные',
+      'Обход UI невозможен: у роли authenticated отозван UPDATE на колонку status (права уровня колонок). Прямой PATCH status → 403.',
+      'миграция 1; API-тест №4',
+      C.orange,
+    ],
+    [
+      '3 · Бизнес-правило',
+      'Единственный путь — RPC sign_document(): членство, роль signer, статус, блокировка строки, запись в append-only журнал (и отказов тоже).',
+      'миграции 2, 3, 5; API-тесты №6–9',
+      C.ink,
+    ],
+  ]
+  layers.forEach(([h, t, ref, color], i) => {
+    const y = 1.5 + i * 1.65
+    s.addShape(pres.ShapeType.roundRect, {
+      x: 0.6,
+      y,
+      w: W - 1.2,
+      h: 1.45,
+      fill: { color: C.white },
+      line: { color: C.line, width: 1 },
+      rectRadius: 0.1,
+    })
+    s.addShape(pres.ShapeType.roundRect, {
+      x: 0.6,
+      y,
+      w: 2.3,
+      h: 1.45,
+      fill: { color },
+      line: { color },
+      rectRadius: 0.1,
+    })
+    s.addText(h, {
+      x: 0.75,
+      y,
+      w: 2.0,
+      h: 1.45,
+      fontFace: FONT,
+      fontSize: 16,
+      bold: true,
+      color: C.white,
+      isTextBox: true,
+      margin: 0,
+      valign: 'middle',
+    })
+    s.addText(t, {
+      x: 3.1,
+      y: y + 0.15,
+      w: 6.6,
+      h: 1.2,
+      fontFace: FONT,
+      fontSize: 12.5,
+      color: C.ink,
+      isTextBox: true,
+      margin: 0,
+      valign: 'middle',
+    })
+    s.addText(ref, {
+      x: 9.9,
+      y: y + 0.15,
+      w: 2.7,
+      h: 1.2,
+      fontFace: FONT,
+      fontSize: 11,
+      color: C.slate,
+      isTextBox: true,
+      margin: 0,
+      valign: 'middle',
+      italic: true,
+    })
+  })
+  s.addText(
+    'Происхождение: правило «никогда не подписывать автоматически» для AI-агента из ДЗ-2 (бот Диадока) перенесено с уровня инструкции на уровень архитектуры — подпись юридически значима.',
+    {
+      x: 0.6,
+      y: 6.5,
+      w: W - 1.2,
+      h: 0.5,
+      fontFace: FONT,
+      fontSize: 12,
+      color: C.slate,
+      isTextBox: true,
+      margin: 0,
+    },
+  )
+  foot(s)
 }
 
 // 8. AI на каждом этапе
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.white }
   title(s, 'AI-агент на каждом этапе')
   const rows = [
@@ -717,12 +893,12 @@ const foot = (slide, n) =>
       italic: true,
     },
   )
-  foot(s, 8)
+  foot(s)
 }
 
 // 9. Качество и эксплуатация
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.light }
   title(s, 'Качество: CI/CD, тесты, мониторинг')
   s.addImage({ path: SHOT('ci-run.png'), x: 0.6, y: 1.45, w: 6.4, h: 4.0 })
@@ -782,12 +958,86 @@ const foot = (slide, n) =>
       margin: 0,
     },
   )
-  foot(s, 9)
+  foot(s)
+}
+
+// 9a. CI/CD: принципы из курса
+{
+  const s = newSlide()
+  s.background = { color: C.white }
+  title(s, 'CI/CD: принципы из курса, а не дефолт агента')
+  const rows = [
+    [
+      { text: 'Принцип', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+      { text: 'Реализация', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+      { text: 'Что показал на практике', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+    ],
+    [
+      'Fail-fast: дешёвое раньше дорогого',
+      'audit → lint → prettier → tsc → test → build',
+      'прогоны 4–5 упали на prettier за 20 с, не дойдя до сборки',
+    ],
+    [
+      'Деплой зависит от качества',
+      'needs: quality; только main, не PR',
+      '«красное» не попало на сайт — job deploy пропущен',
+    ],
+    [
+      'Секреты ≠ переменные; без PAT',
+      'ключи — Secrets; URL/ID — Variables; деплой по OIDC',
+      'публичное видно в логах, секретов нет; нечему утечь',
+    ],
+    [
+      'Проверка после публикации',
+      'curl живого URL + job verify: Chrome на runner → вход → лента из Supabase → журнал',
+      'закрывает разрыв «деплой зелёный, приложение не работает» (кейсы 4–5)',
+    ],
+    [
+      'Мониторинг как код',
+      'uptime.yml по cron: health RPC + сайт; падение = письмо',
+      'отработал в первом же запуске',
+    ],
+    [
+      'Отмена устаревших, воспроизводимость',
+      'concurrency + cancel-in-progress; npm ci + lock + кэш; npm run ci локально',
+      'локальный и CI-прогоны совпадают',
+    ],
+  ]
+  s.addTable(rows, {
+    x: 0.6,
+    y: 1.45,
+    w: W - 1.2,
+    colW: [3.1, 4.9, 4.13],
+    rowH: 0.66,
+    fontFace: FONT,
+    fontSize: 11.5,
+    color: C.ink,
+    border: { type: 'solid', color: C.line, pt: 0.75 },
+    fill: { color: C.white },
+    valign: 'middle',
+    margin: 0.08,
+  })
+  s.addText(
+    'Сознательно нет: Docker-образов (нет сервера, который их запускал бы) и матрицы Node-версий (один runtime в production). Job verify добавлен по замечанию с защиты — см. docs/agentic_engineering.md §2.',
+    {
+      x: 0.6,
+      y: 6.2,
+      w: W - 1.2,
+      h: 0.6,
+      fontFace: FONT,
+      fontSize: 12,
+      color: C.slate,
+      isTextBox: true,
+      margin: 0,
+      italic: true,
+    },
+  )
+  foot(s)
 }
 
 // 10. Кейсы отладки
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.white }
   title(s, 'Пять багов, которые не видели зелёные тесты')
   const cases = [
@@ -821,12 +1071,12 @@ const foot = (slide, n) =>
       y = 1.4 + Math.floor(i / 2) * 1.8
     card(s, x, y, 5.95, 1.65, h, t, i === 5 ? C.ink : i >= 3 ? C.orange : C.emerald)
   })
-  foot(s, 10)
+  foot(s)
 }
 
 // 11. Выводы
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.light }
   title(s, 'Что я поняла о разработке с AI')
   const points = [
@@ -895,12 +1145,92 @@ const foot = (slide, n) =>
       margin: 0,
     })
   })
-  foot(s, 11)
+  foot(s)
+}
+
+// 11a. Agentic engineering vs вайбкодинг
+{
+  const s = newSlide()
+  s.background = { color: C.light }
+  title(s, 'Agentic engineering ≠ вайбкодинг: где следы в репозитории')
+  const rows = [
+    [
+      { text: 'Признак', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+      { text: 'Вайбкодинг', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+      { text: 'В проекте', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+      { text: 'След', options: { bold: true, color: C.white, fill: { color: C.ink } } },
+    ],
+    [
+      'Правила до кода',
+      'агент пишет «как получится»',
+      '11 правил проекта; правило 7 → src/lib с юнитами, правило 8 → RPC в БД',
+      'CLAUDE.md',
+    ],
+    [
+      'Агент проверяет агента',
+      'автор верит своему выводу',
+      'ревью ТЗ «техлидом» (5 пробелов), аудит OWASP (12 находок), конкуренты',
+      'security_audit.md, competitors.md',
+    ],
+    [
+      'Верификация другим инструментом',
+      '«запустил — вроде работает»',
+      '43 теста, 10 API-тестов к живой базе, 6 e2e на production, «свежий пользователь с нуля»',
+      'scripts/, src/**/*.test.*',
+    ],
+    [
+      'Баги ловит проверка, не удача',
+      'замечает пользователь',
+      '5 багов прошли зелёные тесты — пойманы только верификацией; каждый с причиной',
+      'development_process.md, миграции 2, 5, 6',
+    ],
+    [
+      'Журнал решений и история',
+      'один коммит «final»',
+      'шапка «почему» в каждой миграции; 25+ атомарных коммитов, Co-Authored-By',
+      'supabase/migrations, git log',
+    ],
+    [
+      'Границы человека и честность',
+      '«AI сделал»',
+      'человек: архитектура, провайдеры, миграции в прод, приёмка, решения по аудиту; названо, что не сделано',
+      'agentic_engineering.md §4',
+    ],
+  ]
+  s.addTable(rows, {
+    x: 0.6,
+    y: 1.45,
+    w: W - 1.2,
+    colW: [2.5, 2.4, 4.9, 2.33],
+    rowH: 0.66,
+    fontFace: FONT,
+    fontSize: 11.5,
+    color: C.ink,
+    border: { type: 'solid', color: C.line, pt: 0.75 },
+    fill: { color: C.white },
+    valign: 'middle',
+    margin: 0.08,
+  })
+  s.addText(
+    'Главное отличие: цикл замкнут на проверке, которую делает не тот, кто генерировал — другой агент, другой инструмент, другой сценарий. Честно: первые версии ci.yml и компонентов — чистая генерация; инженерная ценность появилась после прогонов, линтера и ревью.',
+    {
+      x: 0.6,
+      y: 6.15,
+      w: W - 1.2,
+      h: 0.75,
+      fontFace: FONT,
+      fontSize: 12,
+      color: C.ink,
+      isTextBox: true,
+      margin: 0,
+    },
+  )
+  foot(s)
 }
 
 // 12. Итоги
 {
-  const s = pres.addSlide()
+  const s = newSlide()
   s.background = { color: C.ink }
   s.addText('Итоги', {
     x: 0.8,

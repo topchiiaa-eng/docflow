@@ -4,10 +4,19 @@
 #            типы, тесты, production-сборка (артефакт dist).
 # deploy   → только при push в main и только после зелёного quality:
 #            публикация dist на GitHub Pages (hosting без отдельного аккаунта).
+# verify   → после деплоя: smoke-тест production через реальный браузер и реальный
+#            Supabase (вход → лента → журнал). Зелёный деплой ≠ работающее приложение —
+#            этот job закрывает разрыв (см. docs/development_process.md, кейсы 1–5).
+#
+# Принципы (из курса): fail-fast порядок шагов (дешёвые проверки раньше дорогих);
+# деплой зависит от quality (needs) и не запускается для PR; concurrency отменяет
+# устаревшие прогоны; секреты (ключи) отделены от переменных (публичные URL/ID);
+# деплой через OIDC без долгоживущих токенов; после публикации — проверка живого URL.
 #
 # Секреты/переменные репозитория (Settings → Secrets and variables → Actions):
 #   secrets.VITE_SUPABASE_URL, secrets.VITE_SUPABASE_ANON_KEY — бэкенд (publishable key)
 #   vars.VITE_YM_ID — счётчик Яндекс.Метрики (необязательно)
+#   secrets.E2E_EMAIL, secrets.E2E_PASS — тестовый пользователь для post-deploy smoke (job verify)
 # Без секретов сборка проходит в демо-режиме на мок-данных.
 
 name: CI/CD
@@ -85,6 +94,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
@@ -95,3 +106,24 @@ jobs:
           code=$(curl -s -o /dev/null -w '%{http_code}' "${{ steps.deployment.outputs.page_url }}")
           echo "GET ${{ steps.deployment.outputs.page_url }} → $code"
           test "$code" = "200"
+
+  verify:
+    name: Post-deploy smoke (production + Supabase)
+    needs: deploy
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Вход → лента → журнал на production через Chrome
+        env:
+          BASE_URL: ${{ needs.deploy.outputs.page_url }}
+          CHROME_PATH: /usr/bin/google-chrome
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASS: ${{ secrets.E2E_PASS }}
+        run: node scripts/e2e-smoke.mjs
