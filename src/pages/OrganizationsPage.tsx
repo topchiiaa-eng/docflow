@@ -9,9 +9,7 @@ import { ErrorView, LoadingView } from '../components/StateViews'
 type LoadState =
   { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; orgs: Organization[] }
 
-const input =
-  'rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none'
-const btn = 'rounded-xl px-3 py-2 text-sm font-semibold disabled:opacity-60'
+const input = 'input'
 
 /** Экран «Организации»: создание, переименование, удаление; участники и роли (владелец) */
 export function OrganizationsPage({ provider }: { provider: EdoProvider }) {
@@ -88,12 +86,14 @@ export function OrganizationsPage({ provider }: { provider: EdoProvider }) {
 
   return (
     <>
-      <h1 className="text-lg font-bold">Организации</h1>
+      <div>
+        <h1 className="text-2xl font-extrabold tracking-tight">Организации</h1>
+        <p className="mt-0.5 text-sm text-slate-500">
+          Юрлица, их участники и роли. Владелец управляет составом команды
+        </p>
+      </div>
 
-      <form
-        onSubmit={(e) => void create(e)}
-        className="flex flex-wrap items-start gap-2 rounded-2xl border bg-white p-4"
-      >
+      <form onSubmit={(e) => void create(e)} className="card flex flex-wrap items-start gap-2 p-4">
         <div className="min-w-0 flex-1">
           <label className="sr-only" htmlFor="org-name">
             Название новой организации
@@ -114,17 +114,13 @@ export function OrganizationsPage({ provider }: { provider: EdoProvider }) {
             </p>
           )}
         </div>
-        <button
-          type="submit"
-          disabled={busy}
-          className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}
-        >
+        <button type="submit" disabled={busy} className="btn-primary">
           + Создать
         </button>
       </form>
 
       {state.orgs.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-10 text-center text-slate-600">
+        <div className="card p-10 text-center text-slate-600">
           Организаций пока нет — создайте первую, и вы станете её владельцем и подписантом.
         </div>
       ) : (
@@ -236,7 +232,7 @@ function OrgCard({
   }
 
   return (
-    <section aria-label={org.name} className="flex flex-col gap-3 rounded-2xl border bg-white p-4 shadow-sm">
+    <section aria-label={org.name} className="card flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-2">
         {editing ? (
           <div className="flex flex-1 gap-2">
@@ -246,11 +242,7 @@ function OrgCard({
               onChange={(e) => setName(e.target.value)}
               aria-label="Новое название"
             />
-            <button
-              onClick={() => void rename()}
-              disabled={busy}
-              className={`${btn} bg-emerald-600 text-white`}
-            >
+            <button onClick={() => void rename()} disabled={busy} className="btn-primary px-3 py-2">
               Сохранить
             </button>
             <button
@@ -258,7 +250,7 @@ function OrgCard({
                 setEditing(false)
                 setName(org.name)
               }}
-              className={`${btn} border border-slate-300`}
+              className="btn-secondary px-3 py-2"
             >
               Отмена
             </button>
@@ -276,7 +268,7 @@ function OrgCard({
               <div className="flex gap-1">
                 <button
                   onClick={() => setEditing(true)}
-                  className="text-xs font-semibold text-emerald-700 hover:underline"
+                  className="text-xs font-semibold text-brand-700 hover:underline"
                 >
                   Переименовать
                 </button>
@@ -296,7 +288,7 @@ function OrgCard({
       {members === null ? (
         <button
           onClick={() => void loadMembers()}
-          className="self-start text-xs font-semibold text-emerald-700 hover:underline"
+          className="self-start text-xs font-semibold text-brand-700 hover:underline"
         >
           Показать участников
         </button>
@@ -340,7 +332,7 @@ function OrgCard({
           />
           <select
             aria-label="Роль"
-            className={input}
+            className="input w-auto! shrink-0"
             value={role}
             onChange={(e) => setRole(e.target.value as MemberRole)}
           >
@@ -350,11 +342,7 @@ function OrgCard({
               </option>
             ))}
           </select>
-          <button
-            type="submit"
-            disabled={busy}
-            className={`${btn} border border-emerald-600 text-emerald-700 hover:bg-emerald-50`}
-          >
+          <button type="submit" disabled={busy} className="btn-secondary px-3 py-2 text-brand-700">
             Добавить
           </button>
         </form>

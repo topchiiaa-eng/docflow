@@ -1,1 +1,62 @@
 @import 'tailwindcss';
+
+/* Дизайн-токены приложения (концепция «Дашборд» из ДЗ-3, светлая тема) */
+@theme {
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-500: #10b981;
+  --color-brand-600: #0e7a5f;
+  --color-brand-700: #0b5f4a;
+  --color-ink: #0f172a;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  /* Tailwind v4: `border` без цвета = currentColor (чёрная рамка). Возвращаем мягкий дефолт. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-slate-200);
+  }
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    color: var(--color-ink);
+  }
+  body {
+    background: var(--color-slate-50);
+  }
+  /* Единый видимый фокус для клавиатуры (доступность) */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+  ::selection {
+    background: var(--color-brand-100);
+  }
+}
+
+@layer utilities {
+  .card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)];
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-60;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60;
+  }
+  .input {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold tracking-wide text-slate-600;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-slate-200/70;
+  }
+}

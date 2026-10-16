@@ -4,6 +4,7 @@ import { supabase } from '../api'
 import { log } from '../lib/logger'
 import { track } from '../lib/analytics'
 import { parseOAuthError } from '../lib/auth'
+import { CheckIcon, Logo } from './Icons'
 
 interface RenderProps {
   userEmail: string | null
@@ -38,7 +39,7 @@ function SupabaseGate({ sb, children }: { sb: SupabaseClient; children: (p: Rend
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
       </div>
     )
   }
@@ -119,120 +120,141 @@ function LoginForm({ sb }: { sb: SupabaseClient }) {
     }
   }
 
-  const input =
-    'w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:outline-none'
+  const input = 'input'
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <form
-        onSubmit={(e) => void submit(e)}
-        className="w-full max-w-sm rounded-2xl border bg-white p-6 shadow-sm"
-      >
-        <h1 className="text-lg font-extrabold">
-          Док<span className="text-emerald-600">Поток</span>
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {mode === 'signin'
-            ? 'Вход в единую входящую ЭДО'
-            : 'Регистрация: вы получите демо-набор из 3 организаций'}
-        </p>
-
-        <label className="mt-4 block text-xs font-semibold text-slate-600" htmlFor="email">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          required
-          autoComplete="email"
-          className={input}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <label className="mt-3 block text-xs font-semibold text-slate-600" htmlFor="password">
-          Пароль
-        </label>
-        <input
-          id="password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="current-password"
-          className={input}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        {error && (
-          <div
-            role="alert"
-            className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-sm text-red-700"
-          >
-            {error}
-          </div>
-        )}
-        {notice && (
-          <div
-            role="status"
-            className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-sm text-emerald-700"
-          >
-            {notice}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => void signInWithGoogle()}
-          disabled={busy}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 disabled:opacity-60"
-        >
-          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-            <path
-              fill="#EA4335"
-              d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"
-            />
-            <path
-              fill="#4285F4"
-              d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"
-            />
-            <path
-              fill="#34A853"
-              d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.1C6.5 42.6 14.6 48 24 48z"
-            />
-          </svg>
-          Войти через Google
-        </button>
-        <div className="my-3 flex items-center gap-3 text-xs text-slate-400">
-          <span className="h-px flex-1 bg-slate-200" />
-          или по email
-          <span className="h-px flex-1 bg-slate-200" />
+    <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+      {/* Левая панель: ценность продукта (десктоп) */}
+      <aside className="hidden flex-col justify-between bg-ink p-10 text-white lg:flex">
+        <Logo className="[&_span:last-child]:text-white" />
+        <div>
+          <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
+            Все входящие ЭДО-документы ваших компаний — в одной ленте
+          </h2>
+          <ul className="mt-6 space-y-3 text-sm text-slate-300">
+            {[
+              'Одна проверка утром вместо обхода ящиков каждого юрлица',
+              'Очередь «на подпись» — ничего не теряется между организациями',
+              'Подписание только после явного подтверждения, с журналом попыток',
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-500 text-white">
+                  <CheckIcon size={12} strokeWidth={3} />
+                </span>
+                {t}
+              </li>
+            ))}
+          </ul>
         </div>
+        <p className="text-xs text-slate-500">
+          Демо: регистрация создаёт 3 организации и 6 документов автоматически
+        </p>
+      </aside>
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
-        >
-          {busy ? 'Секунду…' : mode === 'signin' ? 'Войти' : 'Зарегистрироваться'}
-        </button>
+      <div className="flex items-center justify-center bg-slate-50 p-4 sm:p-8">
+        <form onSubmit={(e) => void submit(e)} className="card w-full max-w-sm p-6 sm:p-8">
+          <h1 className="lg:hidden">
+            <Logo />
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {mode === 'signin'
+              ? 'Вход в единую входящую ЭДО'
+              : 'Регистрация: вы получите демо-набор из 3 организаций'}
+          </p>
 
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === 'signin' ? 'signup' : 'signin')
-            setError(null)
-            setNotice(null)
-          }}
-          className="mt-3 w-full text-center text-sm text-emerald-700 hover:underline"
-        >
-          {mode === 'signin' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
-        </button>
-      </form>
+          <label className="label mt-4" htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            className={input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <label className="label mt-3" htmlFor="password">
+            Пароль
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="current-password"
+            className={input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {error && (
+            <div
+              role="alert"
+              className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-sm text-red-700"
+            >
+              {error}
+            </div>
+          )}
+          {notice && (
+            <div
+              role="status"
+              className="mt-3 rounded-xl border border-brand-100 bg-brand-50 p-2.5 text-sm text-brand-700"
+            >
+              {notice}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => void signInWithGoogle()}
+            disabled={busy}
+            className="btn-secondary mt-5 w-full"
+          >
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.1C6.5 42.6 14.6 48 24 48z"
+              />
+            </svg>
+            Войти через Google
+          </button>
+          <div className="my-3 flex items-center gap-3 text-xs text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" />
+            или по email
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <button type="submit" disabled={busy} className="btn-primary w-full">
+            {busy ? 'Секунду…' : mode === 'signin' ? 'Войти' : 'Зарегистрироваться'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === 'signin' ? 'signup' : 'signin')
+              setError(null)
+              setNotice(null)
+            }}
+            className="mt-3 w-full text-center text-sm font-semibold text-brand-700 hover:underline"
+          >
+            {mode === 'signin' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

@@ -10,9 +10,8 @@ interface Props {
   onCancel: () => void
 }
 
-const input =
-  'w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none'
-const label = 'mt-3 block text-xs font-semibold text-slate-600'
+const input = 'input'
+const label = 'label mt-3'
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null
@@ -58,7 +57,7 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
     >
       <form
         onSubmit={submit}
-        className="max-h-full w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+        className="card max-h-full w-full max-w-md overflow-y-auto p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         noValidate
       >
@@ -143,13 +142,21 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
         <label className={label} htmlFor="nd-file">
           Файл PDF (необязательно)
         </label>
-        <input
-          id="nd-file"
-          type="file"
-          accept="application/pdf"
-          className="block w-full text-sm"
-          onChange={(e) => set('file', e.target.files?.[0] ?? null)}
-        />
+        <div className="flex items-center gap-3">
+          <label htmlFor="nd-file" className="btn-secondary cursor-pointer px-3 py-2 text-xs">
+            Выбрать PDF
+          </label>
+          <span className="truncate text-xs text-slate-500">
+            {form.file ? form.file.name : 'Файл не выбран'}
+          </span>
+          <input
+            id="nd-file"
+            type="file"
+            accept="application/pdf"
+            className="sr-only"
+            onChange={(e) => set('file', e.target.files?.[0] ?? null)}
+          />
+        </div>
         <FieldError message={errors.file} />
 
         <label className="mt-3 flex items-center gap-2 text-sm">
@@ -171,19 +178,10 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
         )}
 
         <div className="mt-5 flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={busy}
-            className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50"
-          >
+          <button type="button" onClick={onCancel} disabled={busy} className="btn-secondary flex-1">
             Отмена
           </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className="flex-1 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
-          >
+          <button type="submit" disabled={busy} className="btn-primary flex-1">
             {busy ? 'Сохраняем…' : 'Добавить'}
           </button>
         </div>

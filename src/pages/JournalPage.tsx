@@ -48,7 +48,12 @@ export function JournalPage({ provider }: { provider: EdoProvider }) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-bold">Журнал подписаний</h1>
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Журнал подписаний</h1>
+          <p className="mt-0.5 text-sm text-slate-500">
+            Кто, что и когда подписал — и какие попытки были отклонены
+          </p>
+        </div>
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input type="checkbox" checked={onlyFailed} onChange={(e) => setOnlyFailed(e.target.checked)} />
           Только отказы ({failed})
@@ -56,11 +61,11 @@ export function JournalPage({ provider }: { provider: EdoProvider }) {
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-10 text-center text-slate-600">
+        <div className="card p-10 text-center text-slate-600">
           {onlyFailed ? 'Отказов не было' : 'Журнал пуст — подпишите первый документ на экране «На подпись»'}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border bg-white">
+        <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
@@ -82,7 +87,7 @@ export function JournalPage({ provider }: { provider: EdoProvider }) {
                   <td className="px-4 py-2.5 text-slate-500">{e.org}</td>
                   <td className="px-4 py-2.5">
                     {e.success ? (
-                      <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                      <span className="rounded-md border border-brand-100 bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
                         Подписан
                       </span>
                     ) : (

@@ -14,10 +14,10 @@ describe('Навигация между экранами', () => {
     render(<App provider={createMockProvider(0)} />)
     await screen.findByText(/ГетБлоггер/)
 
-    await user.click(screen.getByRole('link', { name: 'Журнал' }))
+    await user.click(screen.getAllByRole('link', { name: 'Журнал' })[0])
     expect(await screen.findByRole('heading', { name: 'Журнал подписаний' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('link', { name: 'Организации' }))
+    await user.click(screen.getAllByRole('link', { name: 'Организации' })[0])
     expect(await screen.findByRole('heading', { name: 'Организации' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Компания А' })).toBeInTheDocument()
   })
@@ -26,7 +26,7 @@ describe('Навигация между экранами', () => {
     const user = userEvent.setup()
     render(<App provider={createMockProvider(0)} />)
     await screen.findByText(/ГетБлоггер/)
-    await user.click(screen.getByRole('link', { name: 'На подпись' }))
+    await user.click(screen.getAllByRole('link', { name: 'На подпись' })[0])
     await screen.findByRole('heading', { name: 'На подпись' })
     expect(screen.queryByText(/Аренда-Сервис/)).not.toBeInTheDocument() // подписан — не в очереди
     expect(screen.getByText(/ВебсайтСофт/)).toBeInTheDocument()
@@ -102,7 +102,7 @@ describe('Документы: добавление и журнал', () => {
     await user.click(screen.getByRole('button', { name: 'Подтвердить' }))
     await screen.findAllByText('Подписан')
 
-    await user.click(screen.getByRole('link', { name: 'Журнал' }))
+    await user.click(screen.getAllByRole('link', { name: 'Журнал' })[0])
     await screen.findByRole('heading', { name: 'Журнал подписаний' })
     const row = screen.getByText('УПД № 260810/54').closest('tr')!
     expect(within(row).getByText('Подписан')).toBeInTheDocument()

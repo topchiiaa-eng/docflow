@@ -1,63 +1,111 @@
 import type { DocFilter, DocStatus } from '../types'
+import { GridIcon, ListIcon, SearchIcon } from './Icons'
+
+export type ViewMode = 'cards' | 'table'
 
 interface Props {
   filter: DocFilter
-  orgs: string[]
+  /** Организации с числом документов — для чипсов-фильтров */
+  orgs: { name: string; count: number }[]
+  total: number
   /** На экране «На подпись» статус зафиксирован — селектор скрыт */
   hideStatus?: boolean
+  view: ViewMode
+  onViewChange: (v: ViewMode) => void
   onChange: (f: DocFilter) => void
 }
 
-const input =
-  'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none'
+/** Фильтры ленты: чипсы организаций (концепция 1), статус, поиск, переключатель вида (US-10) */
+export function FiltersBar({ filter, orgs, total, hideStatus, view, onViewChange, onChange }: Props) {
+  const chip = (active: boolean) =>
+    `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+      active
+        ? 'border-brand-600 bg-brand-600 text-white'
+        : 'border-slate-300 bg-white text-slate-600 hover:border-brand-400'
+    }`
 
-export function FiltersBar({ filter, orgs, hideStatus, onChange }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <label className="sr-only" htmlFor="f-org">
-        Организация
-      </label>
-      <select
-        id="f-org"
-        className={input}
-        value={filter.org}
-        onChange={(e) => onChange({ ...filter, org: e.target.value })}
-      >
-        <option value="all">Все организации</option>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Организация">
+        <button
+          className={chip(filter.org === 'all')}
+          onClick={() => onChange({ ...filter, org: 'all' })}
+          aria-pressed={filter.org === 'all'}
+        >
+          Все организации <span className="opacity-70">{total}</span>
+        </button>
         {orgs.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-
-      {!hideStatus && (
-        <>
-          <label className="sr-only" htmlFor="f-status">
-            Статус
-          </label>
-          <select
-            id="f-status"
-            className={input}
-            value={filter.status}
-            onChange={(e) => onChange({ ...filter, status: e.target.value as DocStatus | 'all' })}
+          <button
+            key={o.name}
+            className={chip(filter.org === o.name)}
+            onClick={() => onChange({ ...filter, org: o.name })}
+            aria-pressed={filter.org === o.name}
           >
-            <option value="all">Все статусы</option>
-            <option value="requires_signature">Требуется подпись</option>
-            <option value="signed">Подписан</option>
-            <option value="info">Не требует подписи</option>
-          </select>
-        </>
-      )}
+            {o.name} <span className="opacity-70">{o.count}</span>
+          </button>
+        ))}
+      </div>
 
-      <input
-        type="search"
-        aria-label="Поиск"
-        placeholder="Поиск: контрагент или номер…"
-        className={`${input} min-w-0 flex-1 sm:min-w-56`}
-        value={filter.query}
-        onChange={(e) => onChange({ ...filter, query: e.target.value })}
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="relative min-w-0 flex-1 sm:min-w-64">
+          <span className="sr-only">Поиск</span>
+          <SearchIcon
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="search"
+            aria-label="Поиск"
+            placeholder="Контрагент или номер документа…"
+            className="input pl-9!"
+            value={filter.query}
+            onChange={(e) => onChange({ ...filter, query: e.target.value })}
+          />
+        </label>
+
+        {!hideStatus && (
+          <>
+            <label className="sr-only" htmlFor="f-status">
+              Статус
+            </label>
+            <select
+              id="f-status"
+              className="input w-auto! shrink-0"
+              value={filter.status}
+              onChange={(e) => onChange({ ...filter, status: e.target.value as DocStatus | 'all' })}
+            >
+              <option value="all">Все статусы</option>
+              <option value="requires_signature">Требуется подпись</option>
+              <option value="signed">Подписан</option>
+              <option value="info">Не требует подписи</option>
+            </select>
+          </>
+        )}
+
+        <div
+          role="group"
+          aria-label="Вид"
+          className="ml-auto inline-flex shrink-0 rounded-xl border border-slate-300 bg-white p-0.5"
+        >
+          {(
+            [
+              ['cards', GridIcon, 'Карточки'],
+              ['table', ListIcon, 'Таблица'],
+            ] as const
+          ).map(([mode, Icon, label]) => (
+            <button
+              key={mode}
+              onClick={() => onViewChange(mode)}
+              aria-pressed={view === mode}
+              aria-label={label}
+              title={label}
+              className={`rounded-[10px] p-2 transition ${view === mode ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+            >
+              <Icon size={16} />
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

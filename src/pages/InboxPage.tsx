@@ -4,7 +4,8 @@ import { log } from '../lib/logger'
 import { track } from '../lib/analytics'
 import { filterDocuments } from '../lib/documents'
 import { KpiTiles } from '../components/KpiTiles'
-import { FiltersBar } from '../components/FiltersBar'
+import { FiltersBar, type ViewMode } from '../components/FiltersBar'
+import { Toasts, type ToastData } from '../components/Toast'
 import { DocumentList } from '../components/DocumentList'
 import { DetailPanel } from '../components/DetailPanel'
 import { SignDialog } from '../components/SignDialog'
@@ -40,6 +41,25 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [fileBusy, setFileBusy] = useState(false)
+  const [view, setView] = useState<ViewMode>(() => {
+    try {
+      return (localStorage.getItem('docflow.view') as ViewMode) || 'cards'
+    } catch {
+      return 'cards'
+    }
+  })
+  const [toasts, setToasts] = useState<ToastData[]>([])
+  const toast = (kind: ToastData['kind'], text: string) =>
+    setToasts((t) => [...t, { id: Date.now() + Math.random(), kind, text }])
+  const dismissToast = (id: number) => setToasts((t) => t.filter((x) => x.id !== id))
+  const changeView = (v: ViewMode) => {
+    setView(v)
+    try {
+      localStorage.setItem('docflow.view', v)
+    } catch {
+      /* приватный режим — выбор не сохраняем */
+    }
+  }
 
   // Загрузка привязана к счётчику попыток: «Повторить» переводит экран в loading
   // в обработчике клика и инкрементирует attempt; сам эффект меняет состояние
@@ -70,7 +90,11 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
   }
 
   const docs = state.kind === 'ready' ? state.docs : NO_DOCS
-  const orgNames = useMemo(() => [...new Set(docs.map((d) => d.org))], [docs])
+  const orgCounts = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const d of docs) m.set(d.org, (m.get(d.org) ?? 0) + 1)
+    return [...m].map(([name, count]) => ({ name, count }))
+  }, [docs])
   const effectiveFilter = useMemo(
     () => (mode === 'sign' ? { ...filter, status: 'requires_signature' as const } : filter),
     [mode, filter],
@@ -109,6 +133,7 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
       log.info('document.signed', { id: selected.id })
       track('sign_success')
       patchDoc(selected.id, { status: 'signed' })
+      toast('success', `Подписан: ${selected.title}`)
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Не удалось подписать документ'
       log.warn('document.sign_denied', { id: selected.id, message })
@@ -127,6 +152,7 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
       setState((s) => (s.kind === 'ready' ? { kind: 'ready', docs: [doc, ...s.docs] } : s))
       setAdding(false)
       setSelectedId(doc.id)
+      toast('success', input.file ? 'Документ добавлен, PDF загружен' : 'Документ добавлен')
       track('document_create')
     } catch (e) {
       setAddError(e instanceof Error ? e.message : 'Не удалось добавить документ')
@@ -146,6 +172,7 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
       setSelectedId(null)
       setDeleting(false)
       log.info('document.deleted', { id: selected.id })
+      toast('success', 'Документ удалён')
     } catch (e) {
       setDeleting(false)
       setSignError(e instanceof Error ? e.message : 'Не удалось удалить документ')
@@ -172,13 +199,19 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-bold">{mode === 'sign' ? 'На подпись' : 'Входящие'}</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            {mode === 'sign' ? 'На подпись' : 'Входящие'}
+          </h1>
+          <p className="mt-0.5 text-sm text-slate-500">
+            {mode === 'sign'
+              ? 'Документы, ожидающие вашего решения, по всем организациям'
+              : 'Единая лента входящих по всем организациям'}
+          </p>
+        </div>
         {mode === 'inbox' && orgs.length > 0 && (
-          <button
-            onClick={() => setAdding(true)}
-            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
-          >
+          <button onClick={() => setAdding(true)} className="btn-primary">
             + Добавить документ
           </button>
         )}
@@ -187,8 +220,11 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
       {mode === 'inbox' && <KpiTiles docs={docs} />}
       <FiltersBar
         filter={effectiveFilter}
-        orgs={orgNames}
+        orgs={orgCounts}
+        total={docs.length}
         hideStatus={mode === 'sign'}
+        view={view}
+        onViewChange={changeView}
         onChange={(f) => {
           if (f.query !== filter.query) track('search')
           else track('filter_change')
@@ -196,10 +232,11 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
         }}
       />
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <DocumentList
           docs={visible}
           selectedId={selectedId}
+          view={view}
           onSelect={openDoc}
           onResetFilters={() => setFilter(EMPTY_FILTER)}
           emptyText={mode === 'sign' ? 'Документов, ожидающих подписи, нет' : undefined}
@@ -233,6 +270,7 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
         </div>
       </div>
 
+      <Toasts items={toasts} onDismiss={dismissToast} />
       {confirming && selected && (
         <SignDialog
           doc={selected}
