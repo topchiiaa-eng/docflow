@@ -3,6 +3,7 @@ import type { EdoProvider, JournalEntry } from '../types'
 import { formatDate } from '../lib/documents'
 import { log } from '../lib/logger'
 import { ErrorView, LoadingView } from '../components/StateViews'
+import { PageHeader } from '../components/PageHeader'
 
 type LoadState =
   { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; entries: JournalEntry[] }
@@ -47,53 +48,48 @@ export function JournalPage({ provider }: { provider: EdoProvider }) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Журнал подписаний</h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            Кто, что и когда подписал — и какие попытки были отклонены
-          </p>
-        </div>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+      <PageHeader
+        title="Журнал подписаний"
+        subtitle="Кто, что и когда подписал — и какие попытки были отклонены"
+      >
+        <label className="flex items-center gap-2 text-sm text-meta">
           <input type="checkbox" checked={onlyFailed} onChange={(e) => setOnlyFailed(e.target.checked)} />
           Только отказы ({failed})
         </label>
-      </div>
+      </PageHeader>
 
       {entries.length === 0 ? (
-        <div className="card p-10 text-center text-slate-600">
-          {onlyFailed ? 'Отказов не было' : 'Журнал пуст — подпишите первый документ на экране «На подпись»'}
+        <div className="border-y border-rule px-6 py-14 text-center">
+          <p className="label">Пусто</p>
+          <p className="h2 mt-2">{onlyFailed ? 'Отказов не было' : 'Журнал пуст'}</p>
+          {!onlyFailed && <p className="mt-2 text-meta">Подпишите первый документ на экране «На подпись»</p>}
         </div>
       ) : (
-        <div className="card overflow-x-auto">
+        <div className="reveal overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="caps border-b-2 border-ink text-left">
               <tr>
-                <th className="px-4 py-2.5">Когда</th>
-                <th className="px-4 py-2.5">Документ</th>
-                <th className="px-4 py-2.5">Контрагент</th>
-                <th className="px-4 py-2.5">Организация</th>
-                <th className="px-4 py-2.5">Результат</th>
+                <th className="py-2.5 pr-4 font-semibold">Когда</th>
+                <th className="px-4 py-2.5 font-semibold">Документ</th>
+                <th className="px-4 py-2.5 font-semibold">Контрагент</th>
+                <th className="px-4 py-2.5 font-semibold">Организация</th>
+                <th className="py-2.5 pl-4 font-semibold">Результат</th>
               </tr>
             </thead>
             <tbody>
               {entries.map((e) => (
-                <tr key={e.id} className="border-t border-slate-100">
-                  <td className="whitespace-nowrap px-4 py-2.5 text-slate-500">
-                    {formatDate(e.attemptedAt)}
-                  </td>
-                  <td className="px-4 py-2.5 font-semibold">{e.documentTitle}</td>
-                  <td className="px-4 py-2.5">{e.counterparty}</td>
-                  <td className="px-4 py-2.5 text-slate-500">{e.org}</td>
-                  <td className="px-4 py-2.5">
+                <tr key={e.id} className="border-b border-rule">
+                  <td className="num whitespace-nowrap py-3 pr-4 text-meta">{formatDate(e.attemptedAt)}</td>
+                  <td className="px-4 py-3 font-semibold">{e.documentTitle}</td>
+                  <td className="px-4 py-3">{e.counterparty}</td>
+                  <td className="px-4 py-3 text-meta">{e.org}</td>
+                  <td className="py-3 pl-4">
                     {e.success ? (
-                      <span className="rounded-md border border-brand-100 bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
-                        Подписан
-                      </span>
+                      <span className="chip bg-success-container text-on-success">Подписан</span>
                     ) : (
                       <span
                         title={e.detail ?? ''}
-                        className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700"
+                        className="chip bg-error-container normal-case tracking-normal text-on-error"
                       >
                         Отказ{e.detail ? `: ${e.detail.replace(/^отказ:\s*/, '')}` : ''}
                       </span>

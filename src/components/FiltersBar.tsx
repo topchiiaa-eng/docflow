@@ -5,34 +5,31 @@ export type ViewMode = 'cards' | 'table'
 
 interface Props {
   filter: DocFilter
-  /** Организации с числом документов — для чипсов-фильтров */
   orgs: { name: string; count: number }[]
   total: number
-  /** На экране «На подпись» статус зафиксирован — селектор скрыт */
+  /** На экране «На подпись» статус зафиксирован — селект не нужен */
   hideStatus?: boolean
   view: ViewMode
   onViewChange: (v: ViewMode) => void
   onChange: (f: DocFilter) => void
 }
 
-/** Фильтры ленты: чипсы организаций (концепция 1), статус, поиск, переключатель вида (US-10) */
+/** Фильтры ленты: чипсы организаций, поиск, статус, переключатель вида (US-10) */
 export function FiltersBar({ filter, orgs, total, hideStatus, view, onViewChange, onChange }: Props) {
   const chip = (active: boolean) =>
-    `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-      active
-        ? 'border-brand-600 bg-brand-600 text-white'
-        : 'border-slate-300 bg-white text-slate-600 hover:border-brand-400'
+    `chip h-8 border transition-colors ${
+      active ? 'border-ink bg-ink text-paper' : 'border-rule-input bg-transparent text-ink hover:border-ink'
     }`
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="reveal flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Организация">
         <button
           className={chip(filter.org === 'all')}
           onClick={() => onChange({ ...filter, org: 'all' })}
           aria-pressed={filter.org === 'all'}
         >
-          Все организации <span className="opacity-70">{total}</span>
+          Все организации <span className={filter.org === 'all' ? 'opacity-70' : 'text-meta'}>{total}</span>
         </button>
         {orgs.map((o) => (
           <button
@@ -41,7 +38,7 @@ export function FiltersBar({ filter, orgs, total, hideStatus, view, onViewChange
             onClick={() => onChange({ ...filter, org: o.name })}
             aria-pressed={filter.org === o.name}
           >
-            {o.name} <span className="opacity-70">{o.count}</span>
+            {o.name} <span className={filter.org === o.name ? 'opacity-70' : 'text-meta'}>{o.count}</span>
           </button>
         ))}
       </div>
@@ -51,7 +48,8 @@ export function FiltersBar({ filter, orgs, total, hideStatus, view, onViewChange
           <span className="sr-only">Поиск</span>
           <SearchIcon
             size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            strokeWidth={1.5}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-meta"
           />
           <input
             type="search"
@@ -82,11 +80,7 @@ export function FiltersBar({ filter, orgs, total, hideStatus, view, onViewChange
           </>
         )}
 
-        <div
-          role="group"
-          aria-label="Вид"
-          className="ml-auto inline-flex shrink-0 rounded-xl border border-slate-300 bg-white p-0.5"
-        >
+        <div role="group" aria-label="Вид" className="ml-auto inline-flex shrink-0 border border-rule-input">
           {(
             [
               ['cards', GridIcon, 'Карточки'],
@@ -99,9 +93,11 @@ export function FiltersBar({ filter, orgs, total, hideStatus, view, onViewChange
               aria-pressed={view === mode}
               aria-label={label}
               title={label}
-              className={`rounded-[10px] p-2 transition ${view === mode ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`grid h-[38px] w-10 place-items-center transition-colors ${
+                view === mode ? 'bg-ink text-paper' : 'text-meta hover:bg-paper-subtle hover:text-ink'
+              }`}
             >
-              <Icon size={16} />
+              <Icon size={16} strokeWidth={1.5} />
             </button>
           ))}
         </div>

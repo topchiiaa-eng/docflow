@@ -44,20 +44,10 @@ export const SearchIcon = ({ size, ...p }: P) => (
     <path d="M20 20l-3.5-3.5" />
   </svg>
 )
-export const PlusIcon = ({ size, ...p }: P) => (
-  <svg {...base(size)} {...p}>
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-)
 export const FileIcon = ({ size, ...p }: P) => (
   <svg {...base(size)} {...p}>
     <path d="M6 3h8l5 5v13H6z" />
     <path d="M14 3v5h5" />
-  </svg>
-)
-export const CheckIcon = ({ size, ...p }: P) => (
-  <svg {...base(size)} {...p}>
-    <path d="M5 12l4.5 4.5L19 7" />
   </svg>
 )
 export const XIcon = ({ size, ...p }: P) => (
@@ -84,36 +74,16 @@ export const GridIcon = ({ size, ...p }: P) => (
     <rect x="13" y="13" width="7" height="7" rx="1.5" />
   </svg>
 )
-export const RubleIcon = ({ size, ...p }: P) => (
-  <svg {...base(size)} {...p}>
-    <path d="M9 20V4h5a4 4 0 010 8H7M7 16h7" />
-  </svg>
-)
 export const LogoutIcon = ({ size, ...p }: P) => (
   <svg {...base(size)} {...p}>
     <path d="M10 17l5-5-5-5M15 12H3M13 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5" />
   </svg>
 )
-export const UsersIcon = ({ size, ...p }: P) => (
-  <svg {...base(size)} {...p}>
-    <circle cx="9" cy="8" r="3.5" />
-    <path d="M2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 7M21.5 20a6.5 6.5 0 00-5-6.3" />
-  </svg>
-)
-export const SparkIcon = ({ size, ...p }: P) => (
-  <svg {...base(size)} {...p}>
-    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-  </svg>
-)
 
-/** Логотип: монограмма в брендовом квадрате */
+/** Логотип: словесный знак серифом с квадратной «маркой» — без цветного квадрата с иконкой */
 export const Logo = ({ className = '' }: { className?: string }) => (
-  <span className={`inline-flex items-center gap-2 ${className}`}>
-    <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white shadow-sm">
-      <InboxIcon size={16} strokeWidth={2.2} />
-    </span>
-    <span className="text-lg font-extrabold tracking-tight">
-      Док<span className="text-brand-600">Поток</span>
-    </span>
+  <span className={`inline-flex items-baseline gap-2 ${className}`}>
+    <span className="inline-block h-3 w-3 translate-y-px bg-ink" aria-hidden="true" />
+    <span className="font-serif text-xl font-bold leading-none tracking-tight">ДокПоток</span>
   </span>
 )

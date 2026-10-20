@@ -56,6 +56,9 @@ jobs:
       - name: Линтер (oxlint, 0 предупреждений)
         run: npm run lint
 
+      - name: Дизайн-система (DESIGN.md lint — контракт, ссылки токенов, контраст WCAG)
+        run: npm run design:lint
+
       - name: Форматирование (prettier --check)
         run: npm run format:check
 

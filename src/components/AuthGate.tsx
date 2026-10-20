@@ -4,7 +4,7 @@ import { supabase } from '../api'
 import { log } from '../lib/logger'
 import { track } from '../lib/analytics'
 import { parseOAuthError } from '../lib/auth'
-import { CheckIcon, Logo } from './Icons'
+import { Logo } from './Icons'
 
 interface RenderProps {
   userEmail: string | null
@@ -38,8 +38,8 @@ function SupabaseGate({ sb, children }: { sb: SupabaseClient; children: (p: Rend
 
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="label animate-pulse">Загрузка…</p>
       </div>
     )
   }
@@ -121,48 +121,60 @@ function LoginForm({ sb }: { sb: SupabaseClient }) {
   }
 
   const input = 'input'
+  const points = [
+    ['01', 'Одна лента', 'Одна проверка утром вместо обхода ящиков каждого юрлица'],
+    [
+      '02',
+      'Очередь на подпись',
+      'Ничего не теряется между организациями — всё, что ждёт решения, в одном списке',
+    ],
+    [
+      '03',
+      'Подпись с подтверждением',
+      'Подписание только после явного подтверждения, каждая попытка — в журнале',
+    ],
+  ]
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      {/* Левая панель: ценность продукта (десктоп) */}
-      <aside className="hidden flex-col justify-between bg-ink p-10 text-white lg:flex">
-        <Logo className="[&_span:last-child]:text-white" />
+      {/* Левая полоса: «передовица» продукта (десктоп) — липкая, прокручивается только форма */}
+      <aside className="hidden flex-col justify-between border-r border-rule bg-paper p-10 lg:sticky lg:top-0 lg:flex lg:h-screen">
+        <div className="flex items-baseline justify-between border-b-2 border-ink pb-3">
+          <Logo />
+          <span className="label text-meta-light">Единая входящая ЭДО</span>
+        </div>
         <div>
-          <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
+          <h2 className="font-serif text-[2.75rem] font-bold leading-[1.1] tracking-[-0.01em]">
             Все входящие ЭДО-документы ваших компаний — в одной ленте
           </h2>
-          <ul className="mt-6 space-y-3 text-sm text-slate-300">
-            {[
-              'Одна проверка утром вместо обхода ящиков каждого юрлица',
-              'Очередь «на подпись» — ничего не теряется между организациями',
-              'Подписание только после явного подтверждения, с журналом попыток',
-            ].map((t) => (
-              <li key={t} className="flex items-start gap-3">
-                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-500 text-white">
-                  <CheckIcon size={12} strokeWidth={3} />
-                </span>
-                {t}
-              </li>
+          <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-rule pt-5">
+            {points.map(([n, t, text]) => (
+              <div key={n}>
+                <dt>
+                  <span className="label">{n}</span>
+                  <span className="mt-1 block font-serif text-base font-bold leading-tight">{t}</span>
+                </dt>
+                <dd className="small mt-2 text-meta">{text}</dd>
+              </div>
             ))}
-          </ul>
+          </dl>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="small text-meta-light">
           Демо: регистрация создаёт 3 организации и 6 документов автоматически
         </p>
       </aside>
 
-      <div className="flex items-center justify-center bg-slate-50 p-4 sm:p-8">
-        <form onSubmit={(e) => void submit(e)} className="card w-full max-w-sm p-6 sm:p-8">
+      <div className="flex items-center justify-center bg-paper-muted p-4 sm:p-8">
+        <form onSubmit={(e) => void submit(e)} className="card-elevated w-full max-w-sm bg-paper p-6 sm:p-8">
           <h1 className="lg:hidden">
             <Logo />
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {mode === 'signin'
-              ? 'Вход в единую входящую ЭДО'
-              : 'Регистрация: вы получите демо-набор из 3 организаций'}
+          <p className="label mt-2 lg:mt-0">{mode === 'signin' ? 'Вход' : 'Регистрация'}</p>
+          <p className="h3 mt-1">
+            {mode === 'signin' ? 'Вход в единую входящую ЭДО' : 'Вы получите демо-набор из 3 организаций'}
           </p>
 
-          <label className="label mt-4" htmlFor="email">
+          <label className="label mb-1 mt-6" htmlFor="email">
             Email
           </label>
           <input
@@ -175,7 +187,7 @@ function LoginForm({ sb }: { sb: SupabaseClient }) {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <label className="label mt-3" htmlFor="password">
+          <label className="label mb-1 mt-4" htmlFor="password">
             Пароль
           </label>
           <input
@@ -192,7 +204,7 @@ function LoginForm({ sb }: { sb: SupabaseClient }) {
           {error && (
             <div
               role="alert"
-              className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-sm text-red-700"
+              className="mt-4 border-l-[3px] border-error bg-error-container p-3 text-sm text-on-error"
             >
               {error}
             </div>
@@ -200,17 +212,27 @@ function LoginForm({ sb }: { sb: SupabaseClient }) {
           {notice && (
             <div
               role="status"
-              className="mt-3 rounded-xl border border-brand-100 bg-brand-50 p-2.5 text-sm text-brand-700"
+              className="mt-4 border-l-[3px] border-success bg-success-container p-3 text-sm text-on-success"
             >
               {notice}
             </div>
           )}
 
+          <button type="submit" disabled={busy} className="btn-primary mt-6 w-full">
+            {busy ? 'Секунду…' : mode === 'signin' ? 'Войти' : 'Зарегистрироваться'}
+          </button>
+
+          <div className="my-4 flex items-center gap-3 text-xs text-meta-light">
+            <span className="h-px flex-1 bg-rule" />
+            или
+            <span className="h-px flex-1 bg-rule" />
+          </div>
+
           <button
             type="button"
             onClick={() => void signInWithGoogle()}
             disabled={busy}
-            className="btn-secondary mt-5 w-full"
+            className="btn-secondary w-full"
           >
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
               <path
@@ -232,15 +254,6 @@ function LoginForm({ sb }: { sb: SupabaseClient }) {
             </svg>
             Войти через Google
           </button>
-          <div className="my-3 flex items-center gap-3 text-xs text-slate-400">
-            <span className="h-px flex-1 bg-slate-200" />
-            или по email
-            <span className="h-px flex-1 bg-slate-200" />
-          </div>
-
-          <button type="submit" disabled={busy} className="btn-primary w-full">
-            {busy ? 'Секунду…' : mode === 'signin' ? 'Войти' : 'Зарегистрироваться'}
-          </button>
 
           <button
             type="button"
@@ -249,7 +262,7 @@ function LoginForm({ sb }: { sb: SupabaseClient }) {
               setError(null)
               setNotice(null)
             }}
-            className="mt-3 w-full text-center text-sm font-semibold text-brand-700 hover:underline"
+            className="mt-5 w-full text-center text-sm font-semibold underline underline-offset-4"
           >
             {mode === 'signin' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
           </button>

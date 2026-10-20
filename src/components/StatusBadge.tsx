@@ -1,18 +1,13 @@
 import type { DocStatus } from '../types'
 
+/** Status chips по DESIGN.md: uppercase 11px, без скругления, цвет + текст */
 const STYLES: Record<DocStatus, { label: string; cls: string }> = {
-  requires_signature: { label: 'Требуется подпись', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
-  signed: { label: 'Подписан', cls: 'bg-brand-50 text-brand-700 border-brand-100' },
-  info: { label: 'Не требует подписи', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+  requires_signature: { label: 'Требуется подпись', cls: 'bg-warning-container text-on-warning' },
+  signed: { label: 'Подписан', cls: 'bg-success-container text-on-success' },
+  info: { label: 'Не требует подписи', cls: 'bg-paper-subtle text-meta' },
 }
 
 export function StatusBadge({ status }: { status: DocStatus }) {
   const s = STYLES[status]
-  return (
-    <span
-      className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${s.cls}`}
-    >
-      {s.label}
-    </span>
-  )
+  return <span className={`chip ${s.cls}`}>{s.label}</span>
 }

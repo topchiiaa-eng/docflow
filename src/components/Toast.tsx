@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { CheckIcon, AlertIcon, XIcon } from './Icons'
+import { XIcon } from './Icons'
 
 export interface ToastData {
   id: number
@@ -7,7 +7,7 @@ export interface ToastData {
   text: string
 }
 
-/** Ненавязчивые уведомления о результате действия (подписано, добавлено, ошибка) */
+/** Уведомления о результате действия (DESIGN.md → Toasts): чёрная плашка, цветная левая линейка */
 export function Toasts({ items, onDismiss }: { items: ToastData[]; onDismiss: (id: number) => void }) {
   useEffect(() => {
     if (!items.length) return
@@ -24,15 +24,10 @@ export function Toasts({ items, onDismiss }: { items: ToastData[]; onDismiss: (i
         <div
           key={t.id}
           role="status"
-          className={`pointer-events-auto flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg ${
-            t.kind === 'success' ? 'bg-ink' : 'bg-red-600'
+          className={`pointer-events-auto flex items-center gap-3 border-l-[3px] bg-ink py-3 pl-4 pr-3 text-sm font-semibold text-paper ${
+            t.kind === 'success' ? 'border-success' : 'border-error'
           }`}
         >
-          <span
-            className={`grid h-6 w-6 place-items-center rounded-full ${t.kind === 'success' ? 'bg-brand-500' : 'bg-white/20'}`}
-          >
-            {t.kind === 'success' ? <CheckIcon size={14} strokeWidth={2.5} /> : <AlertIcon size={14} />}
-          </span>
           {t.text}
           <button
             onClick={() => onDismiss(t.id)}

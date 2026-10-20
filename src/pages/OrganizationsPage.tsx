@@ -1,10 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type CSSProperties, type FormEvent } from 'react'
 import { ROLE_LABELS, type EdoProvider, type Member, type MemberRole, type Organization } from '../types'
 import { validateEmail, validateOrgName } from '../lib/validation'
 import { log } from '../lib/logger'
 import { track } from '../lib/analytics'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ErrorView, LoadingView } from '../components/StateViews'
+import { PageHeader } from '../components/PageHeader'
 
 type LoadState =
   { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; orgs: Organization[] }
@@ -86,14 +87,12 @@ export function OrganizationsPage({ provider }: { provider: EdoProvider }) {
 
   return (
     <>
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Организации</h1>
-        <p className="mt-0.5 text-sm text-slate-500">
-          Юрлица, их участники и роли. Владелец управляет составом команды
-        </p>
-      </div>
+      <PageHeader
+        title="Организации"
+        subtitle="Юрлица, их участники и роли. Владелец управляет составом команды"
+      />
 
-      <form onSubmit={(e) => void create(e)} className="card flex flex-wrap items-start gap-2 p-4">
+      <form onSubmit={(e) => void create(e)} className="reveal flex flex-wrap items-start gap-2">
         <div className="min-w-0 flex-1">
           <label className="sr-only" htmlFor="org-name">
             Название новой организации
@@ -109,7 +108,7 @@ export function OrganizationsPage({ provider }: { provider: EdoProvider }) {
             }}
           />
           {newError && (
-            <p role="alert" className="mt-1 text-xs text-red-600">
+            <p role="alert" className="mt-1 text-xs text-urgent">
               {newError}
             </p>
           )}
@@ -120,14 +119,17 @@ export function OrganizationsPage({ provider }: { provider: EdoProvider }) {
       </form>
 
       {state.orgs.length === 0 ? (
-        <div className="card p-10 text-center text-slate-600">
-          Организаций пока нет — создайте первую, и вы станете её владельцем и подписантом.
+        <div className="border-y border-rule px-6 py-14 text-center">
+          <p className="label">Пусто</p>
+          <p className="h2 mt-2">Организаций пока нет</p>
+          <p className="mt-2 text-meta">Создайте первую — вы станете её владельцем и подписантом.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {state.orgs.map((org) => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {state.orgs.map((org, i) => (
             <OrgCard
               key={org.id}
+              index={i}
               org={org}
               provider={provider}
               onRenamed={(name) =>
@@ -159,11 +161,13 @@ export function OrganizationsPage({ provider }: { provider: EdoProvider }) {
 }
 
 function OrgCard({
+  index,
   org,
   provider,
   onRenamed,
   onRequestDelete,
 }: {
+  index: number
   org: Organization
   provider: EdoProvider
   onRenamed: (name: string) => void
@@ -232,7 +236,11 @@ function OrgCard({
   }
 
   return (
-    <section aria-label={org.name} className="card flex flex-col gap-3 p-4">
+    <section
+      aria-label={org.name}
+      className="card-elevated reveal flex flex-col gap-3 p-4"
+      style={{ '--reveal-i': index } as CSSProperties}
+    >
       <div className="flex items-start justify-between gap-2">
         {editing ? (
           <div className="flex flex-1 gap-2">
@@ -242,7 +250,7 @@ function OrgCard({
               onChange={(e) => setName(e.target.value)}
               aria-label="Новое название"
             />
-            <button onClick={() => void rename()} disabled={busy} className="btn-primary px-3 py-2">
+            <button onClick={() => void rename()} disabled={busy} className="btn-primary px-3">
               Сохранить
             </button>
             <button
@@ -250,7 +258,7 @@ function OrgCard({
                 setEditing(false)
                 setName(org.name)
               }}
-              className="btn-secondary px-3 py-2"
+              className="btn-secondary px-3"
             >
               Отмена
             </button>
@@ -258,8 +266,8 @@ function OrgCard({
         ) : (
           <>
             <div>
-              <h2 className="text-base font-bold">{org.name}</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="h3">{org.name}</h2>
+              <p className="small mt-0.5 text-meta">
                 Ваша роль: {ROLE_LABELS[org.role]}
                 {org.isOwner ? ' · владелец' : ''}
               </p>
@@ -268,14 +276,14 @@ function OrgCard({
               <div className="flex gap-1">
                 <button
                   onClick={() => setEditing(true)}
-                  className="text-xs font-semibold text-brand-700 hover:underline"
+                  className="text-xs font-semibold underline-offset-4 hover:underline"
                 >
                   Переименовать
                 </button>
-                <span className="text-slate-300">·</span>
+                <span className="text-meta-light">·</span>
                 <button
                   onClick={onRequestDelete}
-                  className="text-xs font-semibold text-red-600 hover:underline"
+                  className="text-xs font-semibold text-urgent underline-offset-4 hover:underline"
                 >
                   Удалить
                 </button>
@@ -288,28 +296,26 @@ function OrgCard({
       {members === null ? (
         <button
           onClick={() => void loadMembers()}
-          className="self-start text-xs font-semibold text-brand-700 hover:underline"
+          className="self-start text-xs font-semibold underline underline-offset-4"
         >
           Показать участников
         </button>
       ) : (
-        <ul
-          aria-label={`Участники ${org.name}`}
-          className="divide-y divide-slate-100 rounded-xl border border-slate-100"
-        >
+        <ul aria-label={`Участники ${org.name}`} className="border-t border-rule">
           {members.map((m) => (
-            <li key={m.userId} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+            <li
+              key={m.userId}
+              className="flex items-center justify-between gap-2 border-b border-rule py-2 text-sm"
+            >
               <span className="truncate">{m.email}</span>
               <span className="flex items-center gap-2">
-                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                  {ROLE_LABELS[m.role]}
-                </span>
+                <span className="chip bg-paper-subtle text-meta">{ROLE_LABELS[m.role]}</span>
                 {org.isOwner && (
                   <button
                     onClick={() => void removeMember(m)}
                     disabled={busy}
                     aria-label={`Удалить ${m.email}`}
-                    className="text-xs text-red-600 hover:underline"
+                    className="px-1 text-xs text-urgent hover:underline"
                   >
                     ✕
                   </button>
@@ -342,14 +348,14 @@ function OrgCard({
               </option>
             ))}
           </select>
-          <button type="submit" disabled={busy} className="btn-secondary px-3 py-2 text-brand-700">
+          <button type="submit" disabled={busy} className="btn-secondary">
             Добавить
           </button>
         </form>
       )}
 
       {error && (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-urgent">
           {error}
         </p>
       )}

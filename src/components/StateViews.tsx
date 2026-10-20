@@ -1,37 +1,43 @@
-import { AlertIcon } from './Icons'
-
 /** Скелетон экрана вместо спиннера: показывает структуру, которая вот-вот появится */
 export function LoadingView() {
   return (
-    <div role="status" aria-label="Загрузка" className="flex flex-col gap-5">
+    <div role="status" aria-label="Загрузка" className="flex flex-col gap-6">
       <span className="sr-only">Загружаем документы…</span>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="border-b-2 border-ink pb-4">
+        <div className="skeleton h-8 w-48" />
+        <div className="skeleton mt-2 h-4 w-72" />
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-rule border-b border-rule">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="card p-4">
-            <div className="skeleton h-7 w-16" />
+          <div key={i} className="px-6 py-4 first:pl-0">
+            <div className="skeleton h-10 w-16" />
             <div className="skeleton mt-3 h-3 w-28" />
           </div>
         ))}
       </div>
       <div className="flex gap-2">
-        <div className="skeleton h-9 w-32" />
-        <div className="skeleton h-9 w-28" />
-        <div className="skeleton h-9 flex-1" />
+        <div className="skeleton h-8 w-36" />
+        <div className="skeleton h-8 w-28" />
+        <div className="skeleton h-8 w-28" />
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_380px]">
-        <div className="flex flex-col gap-2">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="card flex items-center gap-4 p-4">
-              <div className="skeleton h-10 w-10 rounded-xl" />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="border-t border-rule">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-4 border-b border-rule py-4 pl-3">
+              <div className="skeleton h-3 w-10" />
               <div className="flex-1">
                 <div className="skeleton h-4 w-2/3" />
                 <div className="skeleton mt-2 h-3 w-1/3" />
               </div>
-              <div className="skeleton h-4 w-16" />
+              <div className="skeleton h-4 w-20" />
             </div>
           ))}
         </div>
-        <div className="card hidden h-72 lg:block" />
+        <div className="hidden border-t-2 border-ink lg:block">
+          <div className="skeleton mt-4 h-3 w-24" />
+          <div className="skeleton mt-3 h-6 w-3/4" />
+          <div className="skeleton mt-6 h-24 w-full" />
+        </div>
       </div>
     </div>
   )
@@ -39,20 +45,18 @@ export function LoadingView() {
 
 export function ErrorView({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div role="alert" className="card mx-auto flex max-w-lg flex-col items-center p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-full bg-red-50 text-red-600">
-        <AlertIcon size={24} />
-      </span>
-      <p className="mt-4 text-base font-bold">Не удалось загрузить документы</p>
-      <p className="mt-1 text-sm text-slate-500">{message}</p>
-      <button onClick={onRetry} className="btn-primary mt-5">
+    <div role="alert" className="card-elevated mx-auto w-full max-w-lg p-8">
+      <p className="label text-urgent">Ошибка загрузки</p>
+      <p className="h2 mt-2">Не удалось загрузить документы</p>
+      <p className="mt-2 text-meta">{message}</p>
+      <button onClick={onRetry} className="btn-primary mt-6">
         Повторить
       </button>
     </div>
   )
 }
 
-/** Пустое состояние с действием — вместо пустого экрана (правило 6 CLAUDE.md) */
+/** Пустое состояние с действием — вместо пустого экрана (правило 6 CLAUDE.md). Без иллюстраций (DESIGN.md, Don't #11) */
 export function EmptyView({
   title,
   text,
@@ -65,17 +69,12 @@ export function EmptyView({
   onAction?: () => void
 }) {
   return (
-    <div className="card flex flex-col items-center px-6 py-12 text-center">
-      <svg width="88" height="64" viewBox="0 0 88 64" fill="none" aria-hidden="true">
-        <rect x="10" y="14" width="68" height="44" rx="8" fill="#ECFDF5" stroke="#A7F3D0" strokeWidth="2" />
-        <path d="M10 30h20l5 7h18l5-7h20" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
-        <rect x="26" y="4" width="36" height="22" rx="4" fill="#fff" stroke="#CBD5E1" strokeWidth="2" />
-        <path d="M32 11h24M32 17h16" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-      <p className="mt-4 text-base font-bold">{title}</p>
-      {text && <p className="mt-1 max-w-sm text-sm text-slate-500">{text}</p>}
+    <div className="border-y border-rule px-6 py-14 text-center">
+      <p className="label">Пусто</p>
+      <p className="h2 mt-2">{title}</p>
+      {text && <p className="mx-auto mt-2 max-w-sm text-meta">{text}</p>}
       {action && onAction && (
-        <button onClick={onAction} className="btn-secondary mt-5">
+        <button onClick={onAction} className="btn-secondary mt-6">
           {action}
         </button>
       )}

@@ -12,6 +12,7 @@ import { SignDialog } from '../components/SignDialog'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { NewDocumentDialog } from '../components/NewDocumentDialog'
 import { ErrorView, LoadingView } from '../components/StateViews'
+import { PageHeader } from '../components/PageHeader'
 
 const EMPTY_FILTER: DocFilter = { org: 'all', status: 'all', query: '' }
 // Стабильная ссылка для «нет данных»: новый [] на каждый рендер сбрасывал бы useMemo
@@ -199,23 +200,20 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">
-            {mode === 'sign' ? 'На подпись' : 'Входящие'}
-          </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            {mode === 'sign'
-              ? 'Документы, ожидающие вашего решения, по всем организациям'
-              : 'Единая лента входящих по всем организациям'}
-          </p>
-        </div>
+      <PageHeader
+        title={mode === 'sign' ? 'На подпись' : 'Входящие'}
+        subtitle={
+          mode === 'sign'
+            ? 'Документы, ожидающие вашего решения, по всем организациям'
+            : 'Единая лента входящих по всем организациям'
+        }
+      >
         {mode === 'inbox' && orgs.length > 0 && (
           <button onClick={() => setAdding(true)} className="btn-primary">
             + Добавить документ
           </button>
         )}
-      </div>
+      </PageHeader>
 
       {mode === 'inbox' && <KpiTiles docs={docs} />}
       <FiltersBar
@@ -232,7 +230,7 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
         }}
       />
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
         <DocumentList
           docs={visible}
           selectedId={selectedId}
@@ -246,12 +244,15 @@ export function InboxPage({ provider, mode = 'inbox' }: Props) {
         <div
           className={
             selected
-              ? 'fixed inset-0 z-40 bg-slate-900/30 p-3 pt-14 lg:static lg:z-auto lg:bg-transparent lg:p-0 lg:pt-0'
+              ? 'fixed inset-0 z-40 flex items-end bg-black/40 lg:static lg:z-auto lg:block lg:bg-transparent'
               : 'hidden lg:block'
           }
           onClick={() => setSelectedId(null)}
         >
-          <div className="mx-auto h-full max-w-md lg:max-w-none" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="max-h-[88vh] w-full overflow-y-auto bg-paper lg:sticky lg:top-24 lg:max-h-none lg:overflow-visible"
+            onClick={(e) => e.stopPropagation()}
+          >
             <DetailPanel
               doc={selected}
               signing={signing}

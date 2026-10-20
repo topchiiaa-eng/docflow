@@ -1,4 +1,5 @@
-import type { DocKind, DocumentItem } from '../types'
+import type { CSSProperties } from 'react'
+import type { DocumentItem } from '../types'
 import { formatDate, formatSum } from '../lib/documents'
 import { StatusBadge } from './StatusBadge'
 import { EmptyView } from './StateViews'
@@ -13,25 +14,12 @@ interface Props {
   emptyText?: string
 }
 
-/** Цветовое кодирование типа документа — быстрее считывается, чем текст */
-const KIND_STYLE: Record<DocKind, string> = {
-  УПД: 'bg-brand-50 text-brand-700',
-  Акт: 'bg-indigo-50 text-indigo-700',
-  Счёт: 'bg-amber-50 text-amber-700',
-  Договор: 'bg-slate-100 text-slate-700',
-}
+const revealStyle = (i: number) => ({ '--reveal-i': Math.min(i, 8) }) as CSSProperties
 
-function KindChip({ kind }: { kind: DocKind }) {
-  return (
-    <span
-      className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[11px] font-extrabold ${KIND_STYLE[kind]}`}
-      aria-hidden="true"
-    >
-      {kind}
-    </span>
-  )
-}
-
+/**
+ * Лента документов как ведомость (DESIGN.md → Lists): строки с линейками,
+ * категория — метка uppercase, непрочитанное — чёрный квадрат, выбранное — левая линейка 3px.
+ */
 export function DocumentList({
   docs,
   selectedId,
@@ -53,16 +41,16 @@ export function DocumentList({
 
   if (view === 'table') {
     return (
-      <div className="card overflow-x-auto">
-        <table aria-label="Список документов" className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-[11px] uppercase tracking-wider text-slate-500">
+      <div className="reveal overflow-x-auto">
+        <table aria-label="Список документов" className="w-full text-[0.8125rem]">
+          <thead className="caps border-b-2 border-ink text-left">
             <tr>
-              <th className="px-4 py-2.5 font-semibold">Дата</th>
-              <th className="px-4 py-2.5 font-semibold">Организация</th>
-              <th className="px-4 py-2.5 font-semibold">Контрагент</th>
-              <th className="px-4 py-2.5 font-semibold">Документ</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Сумма</th>
-              <th className="px-4 py-2.5 font-semibold">Статус</th>
+              <th className="py-2 pr-3 font-semibold">Дата</th>
+              <th className="hidden px-3 py-2 font-semibold xl:table-cell">Организация</th>
+              <th className="px-3 py-2 font-semibold">Контрагент</th>
+              <th className="px-3 py-2 font-semibold">Документ</th>
+              <th className="px-3 py-2 text-right font-semibold">Сумма</th>
+              <th className="py-2 pl-3 font-semibold">Статус</th>
             </tr>
           </thead>
           <tbody>
@@ -70,16 +58,20 @@ export function DocumentList({
               <tr
                 key={d.id}
                 onClick={() => onSelect(d.id)}
-                className={`cursor-pointer border-t border-slate-100 transition hover:bg-brand-50/40 ${
-                  selectedId === d.id ? 'bg-brand-50' : ''
-                } ${d.unread ? 'font-semibold' : ''}`}
+                className={`cursor-pointer border-b border-rule align-top transition-colors hover:bg-paper-muted ${
+                  selectedId === d.id ? 'bg-paper-muted' : ''
+                } ${d.unread ? 'font-bold' : ''}`}
               >
-                <td className="whitespace-nowrap px-4 py-2.5 text-slate-500">{formatDate(d.receivedAt)}</td>
-                <td className="whitespace-nowrap px-4 py-2.5 text-slate-500">{d.org}</td>
-                <td className="px-4 py-2.5">{d.counterparty}</td>
-                <td className="whitespace-nowrap px-4 py-2.5">{d.title}</td>
-                <td className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">{formatSum(d.sum)}</td>
-                <td className="px-4 py-2.5">
+                <td className="num whitespace-nowrap py-2.5 pr-3 text-[0.8125rem] text-meta">
+                  {formatDate(d.receivedAt)}
+                </td>
+                <td className="hidden whitespace-nowrap px-3 py-2.5 text-meta xl:table-cell">{d.org}</td>
+                <td className="px-3 py-2.5">{d.counterparty}</td>
+                <td className="whitespace-nowrap px-3 py-2.5">{d.title}</td>
+                <td className="num whitespace-nowrap px-3 py-2.5 text-right text-[0.8125rem]">
+                  {formatSum(d.sum)}
+                </td>
+                <td className="py-2 pl-3">
                   <StatusBadge status={d.status} />
                 </td>
               </tr>
@@ -91,45 +83,49 @@ export function DocumentList({
   }
 
   return (
-    <ul aria-label="Список документов" className="flex flex-col gap-2">
-      {docs.map((d) => {
+    <ul aria-label="Список документов" className="border-t border-rule">
+      {docs.map((d, i) => {
         const selected = selectedId === d.id
         return (
-          <li key={d.id}>
+          <li key={d.id} className="reveal" style={revealStyle(i)}>
             <button
               onClick={() => onSelect(d.id)}
               aria-current={selected}
-              className={`card flex w-full items-center gap-4 p-4 text-left transition hover:-translate-y-px hover:shadow-md ${
-                selected ? 'border-brand-500 ring-2 ring-brand-100' : ''
+              className={`flex w-full items-start gap-4 border-b border-rule border-l-[3px] py-3.5 pl-3 pr-2 text-left transition-colors hover:bg-paper-muted ${
+                selected ? 'border-l-ink bg-paper-muted' : 'border-l-transparent'
               }`}
             >
-              <KindChip kind={d.kind} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+              <span className="caps w-12 shrink-0 pt-1 sm:w-16" aria-hidden="true">
+                {d.kind}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-start gap-2">
                   {d.unread && (
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-brand-500" aria-label="Непрочитан" />
+                    <span
+                      className="mt-[7px] h-1.5 w-1.5 shrink-0 bg-ink"
+                      aria-label="Непрочитан"
+                      role="img"
+                    />
                   )}
                   <span
-                    className={`line-clamp-2 text-sm leading-snug ${d.unread ? 'font-bold' : 'font-semibold'}`}
+                    className={`line-clamp-2 font-serif text-base leading-snug sm:text-[1.0625rem] ${d.unread ? 'font-bold' : 'font-normal'}`}
                   >
                     {d.title} · {d.counterparty}
                   </span>
-                </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                </span>
+                <span className="small mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-meta">
                   <span>{d.org}</span>
                   <span aria-hidden="true">·</span>
-                  <span>{formatDate(d.receivedAt)}</span>
-                  <span className="sm:hidden">
-                    <StatusBadge status={d.status} />
+                  <span className="num text-[0.8125rem]">{formatDate(d.receivedAt)}</span>
+                  <StatusBadge status={d.status} />
+                  <span className="num text-[0.8125rem] font-medium text-ink sm:hidden">
+                    {formatSum(d.sum)}
                   </span>
-                </div>
-              </div>
-              <div className="hidden shrink-0 sm:block">
-                <StatusBadge status={d.status} />
-              </div>
-              <div className="w-24 shrink-0 text-right text-sm font-bold tabular-nums">
+                </span>
+              </span>
+              <span className="num hidden w-28 shrink-0 pt-0.5 text-right font-medium sm:block">
                 {formatSum(d.sum)}
-              </div>
+              </span>
             </button>
           </li>
         )

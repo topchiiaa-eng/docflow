@@ -1,23 +1,25 @@
-// Презентация защиты проекта «ДокПоток» (12 слайдов, 16:9).
+// Презентация защиты проекта «ДокПоток» (17 слайдов, 16:9). Оформление — по DESIGN.md проекта.
 // Запуск: node scripts/presentation.mjs → docs/presentation.pptx
 import pptxgen from 'pptxgenjs'
 
+// Палитра и шрифт — из DESIGN.md проекта (система Broadsheet): чёрный, серый, белый, один красный акцент.
+// Georgia — серифная альтернатива PT Serif, установленная на любой macOS/Windows (не требует встраивания шрифта).
 const C = {
-  ink: '0F172A', // slate-900 — тёмные слайды
-  emerald: '0E7A5F', // бренд приложения
-  mint: 'D1FAE5',
-  orange: 'EA580C', // «требуется подпись»
-  slate: '475569',
-  light: 'F8FAFC',
+  ink: '0A0A0A',
+  emerald: '0A0A0A', // акцент = primary (имя сохранено для обратной совместимости слайдов)
+  mint: 'F3F4F6',
+  orange: 'DC2626', // «требуется подпись», срочное
+  slate: '4B5563',
+  light: 'F9FAFB',
   white: 'FFFFFF',
-  line: 'E2E8F0',
+  line: 'E5E7EB',
 }
-const FONT = 'Calibri'
+const FONT = 'Georgia'
 const W = 13.33
 const SHOT = (f) => `docs/screenshots/${f}`
 
 const pres = new pptxgen()
-const TOTAL = 16
+const TOTAL = 17
 let slideNo = 0
 const newSlide = () => {
   slideNo++
@@ -26,8 +28,16 @@ const newSlide = () => {
 pres.layout = 'LAYOUT_WIDE'
 pres.title = 'ДокПоток — защита проекта'
 
-const title = (slide, text, opts = {}) =>
-  slide.addText(text, {
+const title = (slide, text, opts = {}) => {
+  slide.addShape(pres.ShapeType.rect, {
+    x: 0.6,
+    y: 1.3,
+    w: W - 1.2,
+    h: 0.03,
+    fill: { color: opts.color ?? C.ink },
+    line: { color: opts.color ?? C.ink },
+  })
+  return slide.addText(text, {
     x: 0.6,
     y: 0.4,
     w: W - 1.2,
@@ -40,6 +50,7 @@ const title = (slide, text, opts = {}) =>
     margin: 0,
     ...opts,
   })
+}
 const body = (slide, items, o) =>
   slide.addText(
     items.map((t, i) => ({
@@ -49,26 +60,24 @@ const body = (slide, items, o) =>
     { fontFace: FONT, fontSize: 15, color: C.ink, isTextBox: true, valign: 'top', margin: 0, ...o },
   )
 const card = (slide, x, y, w, h, head, text, accent = C.emerald) => {
-  slide.addShape(pres.ShapeType.roundRect, {
+  slide.addShape(pres.ShapeType.rect, {
     x,
     y,
     w,
     h,
     fill: { color: C.white },
     line: { color: C.line, width: 1 },
-    rectRadius: 0.12,
-    shadow: { type: 'outer', blur: 6, offset: 2, angle: 90, color: '000000', opacity: 0.08 },
   })
-  slide.addShape(pres.ShapeType.ellipse, {
-    x: x + 0.25,
-    y: y + 0.25,
-    w: 0.42,
-    h: 0.42,
+  slide.addShape(pres.ShapeType.rect, {
+    x,
+    y,
+    w,
+    h: 0.04,
     fill: { color: accent },
     line: { color: accent },
   })
   slide.addText(head, {
-    x: x + 0.8,
+    x: x + 0.25,
     y: y + 0.2,
     w: w - 1.0,
     h: 0.5,
@@ -101,7 +110,7 @@ const foot = (slide) =>
     h: 0.3,
     fontFace: FONT,
     fontSize: 10,
-    color: '94A3B8',
+    color: '9CA3AF',
     isTextBox: true,
     margin: 0,
   })
@@ -113,7 +122,7 @@ const foot = (slide) =>
   s.addText(
     [
       { text: 'Док', options: { color: C.white } },
-      { text: 'Поток', options: { color: '34D399' } },
+      { text: 'Поток', options: { color: 'E5E7EB' } },
     ],
     { x: 0.8, y: 1.6, w: 8, h: 1.2, fontFace: FONT, fontSize: 60, bold: true, isTextBox: true, margin: 0 },
   )
@@ -124,7 +133,7 @@ const foot = (slide) =>
     h: 0.7,
     fontFace: FONT,
     fontSize: 26,
-    color: 'CBD5E1',
+    color: 'D1D5DB',
     isTextBox: true,
     margin: 0,
   })
@@ -135,7 +144,7 @@ const foot = (slide) =>
     h: 1.0,
     fontFace: FONT,
     fontSize: 16,
-    color: '94A3B8',
+    color: '9CA3AF',
     isTextBox: true,
     margin: 0,
   })
@@ -146,7 +155,7 @@ const foot = (slide) =>
     h: 0.4,
     fontFace: FONT,
     fontSize: 13,
-    color: '34D399',
+    color: 'E5E7EB',
     isTextBox: true,
     margin: 0,
   })
@@ -340,7 +349,7 @@ const foot = (slide) =>
   ]
   items.forEach(([h, t], i) => {
     const y = 1.45 + i * 1.17
-    s.addShape(pres.ShapeType.ellipse, {
+    s.addShape(pres.ShapeType.rect, {
       x: 8.4,
       y: y + 0.05,
       w: 0.5,
@@ -443,20 +452,65 @@ const foot = (slide) =>
   foot(s)
 }
 
+// 5a. Интерфейс по DESIGN.md
+{
+  const s = newSlide()
+  s.background = { color: C.white }
+  title(s, 'Интерфейс: готовая дизайн-система вместо «сгенерированной админки»')
+  s.addText('ДО — итерация 1', {
+    x: 0.6,
+    y: 1.5,
+    w: 5.9,
+    h: 0.3,
+    fontFace: FONT,
+    fontSize: 11,
+    bold: true,
+    color: C.orange,
+    isTextBox: true,
+    margin: 0,
+  })
+  s.addImage({ path: SHOT('before-design-md.png'), x: 0.6, y: 1.85, w: 5.9, h: 3.32 })
+  s.addText('ПОСЛЕ — DESIGN.md (Broadsheet)', {
+    x: 6.85,
+    y: 1.5,
+    w: 5.9,
+    h: 0.3,
+    fontFace: FONT,
+    fontSize: 11,
+    bold: true,
+    color: C.ink,
+    isTextBox: true,
+    margin: 0,
+  })
+  s.addImage({ path: SHOT('live-desktop.png'), x: 6.85, y: 1.85, w: 5.9, h: 3.32 })
+  body(
+    s,
+    [
+      'Маркеры нейрослопа убраны: дефолтная палитра Tailwind, скругления и тени на всём, иконки в цветных квадратах, иллюстрации-заглушки, чек-лист «преимуществ» на входе',
+      'DESIGN.md (формат Google Labs): YAML-токены + правила; взята готовая система Broadsheet (designmd.ai) — серифы, линейки вместо теней, радиус 0, один красный акцент; шрифты заменены на кириллические',
+      'Токены спроецированы на Tailwind: стандартная палитра, rounded-* и shadow-* отключены на уровне темы; файл валидируется в CI. Скролл-эффекты: появление строк, полоса прогресса, липкий заголовок (с prefers-reduced-motion)',
+    ],
+    { x: 0.6, y: 5.35, w: W - 1.2, h: 1.6, fontSize: 11.5 },
+  )
+  foot(s)
+  s.addNotes(
+    'По замечанию защиты интерфейс переведён на готовую дизайн-систему в формате DESIGN.md. Контракт тестов не менялся — 46 тестов проходят. Подробности и честный разбор маркеров — docs/ui_iteration.md.',
+  )
+}
+
 // 6. Архитектура
 {
   const s = newSlide()
   s.background = { color: C.white }
   title(s, 'Архитектура')
   const box = (x, y, w, h, head, lines, fill = C.white, color = C.ink) => {
-    s.addShape(pres.ShapeType.roundRect, {
+    s.addShape(pres.ShapeType.rect, {
       x,
       y,
       w,
       h,
       fill: { color: fill },
       line: { color: fill === C.white ? C.line : fill, width: 1 },
-      rectRadius: 0.1,
     })
     s.addText(head, {
       x: x + 0.2,
@@ -521,7 +575,7 @@ const foot = (slide) =>
     C.white,
   )
   box(9.2, 1.5, 3.6, 3.2, 'Эксплуатация', [
-    'GitHub Actions: audit → lint → prettier → tsc → 43 теста → build → deploy',
+    'GitHub Actions: audit → lint → prettier → tsc → DESIGN.md lint → 46 тестов → build → deploy',
     'Uptime-workflow + health RPC',
     'JSON-логи → client_logs',
     'Яндекс.Метрика: 14 событий',
@@ -748,23 +802,21 @@ const foot = (slide) =>
   ]
   layers.forEach(([h, t, ref, color], i) => {
     const y = 1.5 + i * 1.65
-    s.addShape(pres.ShapeType.roundRect, {
+    s.addShape(pres.ShapeType.rect, {
       x: 0.6,
       y,
       w: W - 1.2,
       h: 1.45,
       fill: { color: C.white },
       line: { color: C.line, width: 1 },
-      rectRadius: 0.1,
     })
-    s.addShape(pres.ShapeType.roundRect, {
+    s.addShape(pres.ShapeType.rect, {
       x: 0.6,
       y,
       w: 2.3,
       h: 1.45,
       fill: { color },
       line: { color },
-      rectRadius: 0.1,
     })
     s.addText(h, {
       x: 0.75,
@@ -911,14 +963,13 @@ const foot = (slide) =>
   stats.forEach(([n, t], i) => {
     const x = 7.4 + (i % 2) * 2.75,
       y = 1.45 + Math.floor(i / 2) * 1.95
-    s.addShape(pres.ShapeType.roundRect, {
+    s.addShape(pres.ShapeType.rect, {
       x,
       y,
       w: 2.55,
       h: 1.75,
       fill: { color: C.white },
       line: { color: C.line, width: 1 },
-      rectRadius: 0.1,
     })
     s.addText(n, {
       x: x + 0.2,
@@ -1099,7 +1150,7 @@ const foot = (slide) =>
   ]
   points.forEach(([h, t], i) => {
     const y = 1.5 + i * 1.3
-    s.addShape(pres.ShapeType.ellipse, {
+    s.addShape(pres.ShapeType.rect, {
       x: 0.6,
       y: y + 0.1,
       w: 0.55,
@@ -1175,7 +1226,7 @@ const foot = (slide) =>
     [
       'Верификация другим инструментом',
       '«запустил — вроде работает»',
-      '43 теста, 10 API-тестов к живой базе, 6 e2e на production, «свежий пользователь с нуля»',
+      '46 тестов, 10 API-тестов к живой базе, 6 e2e на production, «свежий пользователь с нуля»',
       'scripts/, src/**/*.test.*',
     ],
     [
@@ -1251,9 +1302,9 @@ const foot = (slide) =>
       '5 связанных таблиц, полный CRUD, RLS, RPC, Storage, OAuth2, аналитика',
       'CI/CD → GitHub Pages, мониторинг, JSON-логи, аудит безопасности',
       'AI на всех этапах — задокументировано с промптами и результатами',
-      '43 теста, 10 API-тестов, 6 e2e-сценариев; 5 багов найдены только на живой базе и исправлены',
+      '46 тестов, 10 API-тестов, 6 e2e-сценариев; 5 багов найдены только на живой базе и исправлены',
     ],
-    { x: 0.8, y: 1.7, w: 7.8, h: 3.6, fontSize: 16, color: 'E2E8F0' },
+    { x: 0.8, y: 1.7, w: 7.8, h: 3.6, fontSize: 16, color: 'E5E7EB' },
   )
   s.addText(
     'Приложение: topchiiaa-eng.github.io/docflow\nКод и документация: github.com/topchiiaa-eng/docflow',
@@ -1264,7 +1315,7 @@ const foot = (slide) =>
       h: 1.0,
       fontFace: FONT,
       fontSize: 15,
-      color: '34D399',
+      color: 'E5E7EB',
       isTextBox: true,
       margin: 0,
     },

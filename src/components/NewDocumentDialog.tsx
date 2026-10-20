@@ -10,13 +10,12 @@ interface Props {
   onCancel: () => void
 }
 
-const input = 'input'
-const label = 'label mt-3'
+const label = 'label mt-4 mb-1'
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null
   return (
-    <p role="alert" className="mt-1 text-xs text-red-600">
+    <p role="alert" className="mt-1 text-xs text-urgent">
       {message}
     </p>
   )
@@ -34,6 +33,7 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
     file: null,
   })
   const [errors, setErrors] = useState<FieldErrors<keyof NewDocumentInput>>({})
+  const input = (k: keyof NewDocumentInput) => `input ${errors[k] ? 'input-error' : ''}`
 
   const set = <K extends keyof NewDocumentInput>(k: K, v: NewDocumentInput[K]) => {
     setForm((f) => ({ ...f, [k]: v }))
@@ -52,17 +52,18 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
       role="dialog"
       aria-modal="true"
       aria-label="Новый документ"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={onCancel}
     >
       <form
         onSubmit={submit}
-        className="card max-h-full w-full max-w-md overflow-y-auto p-6 shadow-2xl"
+        className="card-elevated max-h-full w-full max-w-md overflow-y-auto p-6"
         onClick={(e) => e.stopPropagation()}
         noValidate
       >
-        <h3 className="text-base font-bold">Добавить документ</h3>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="label">Вне ЭДО</p>
+        <h3 className="h2 mt-1">Добавить документ</h3>
+        <p className="small mt-2 text-meta">
           Для документов, пришедших вне ЭДО (бумага, email). Можно приложить PDF до 10 МБ.
         </p>
 
@@ -71,7 +72,7 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
         </label>
         <select
           id="nd-org"
-          className={input}
+          className={input('orgId')}
           value={form.orgId}
           onChange={(e) => set('orgId', e.target.value)}
         >
@@ -88,21 +89,21 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
         </label>
         <input
           id="nd-cp"
-          className={input}
+          className={input('counterparty')}
           value={form.counterparty}
           placeholder="ООО «Ромашка»"
           onChange={(e) => set('counterparty', e.target.value)}
         />
         <FieldError message={errors.counterparty} />
 
-        <div className="grid grid-cols-[1fr_120px] gap-2">
+        <div className="grid grid-cols-[1fr_120px] gap-3">
           <div>
             <label className={label} htmlFor="nd-title">
               Название / номер
             </label>
             <input
               id="nd-title"
-              className={input}
+              className={input('title')}
               value={form.title}
               placeholder="УПД № 123"
               onChange={(e) => set('title', e.target.value)}
@@ -115,7 +116,7 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
             </label>
             <select
               id="nd-kind"
-              className={input}
+              className="input"
               value={form.kind}
               onChange={(e) => set('kind', e.target.value as DocKind)}
             >
@@ -131,7 +132,7 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
         </label>
         <input
           id="nd-sum"
-          className={input}
+          className={`${input('sum')} num`}
           inputMode="decimal"
           value={form.sum}
           placeholder="89 800"
@@ -143,12 +144,10 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
           Файл PDF (необязательно)
         </label>
         <div className="flex items-center gap-3">
-          <label htmlFor="nd-file" className="btn-secondary cursor-pointer px-3 py-2 text-xs">
+          <label htmlFor="nd-file" className="btn-secondary h-9 cursor-pointer px-3 text-xs">
             Выбрать PDF
           </label>
-          <span className="truncate text-xs text-slate-500">
-            {form.file ? form.file.name : 'Файл не выбран'}
-          </span>
+          <span className="small truncate text-meta">{form.file ? form.file.name : 'Файл не выбран'}</span>
           <input
             id="nd-file"
             type="file"
@@ -159,7 +158,7 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
         </div>
         <FieldError message={errors.file} />
 
-        <label className="mt-3 flex items-center gap-2 text-sm">
+        <label className="mt-4 flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={form.requiresSignature}
@@ -171,13 +170,13 @@ export function NewDocumentDialog({ orgs, busy, error, onSubmit, onCancel }: Pro
         {error && (
           <div
             role="alert"
-            className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-sm text-red-700"
+            className="mt-4 border-l-[3px] border-error bg-error-container p-3 text-sm text-on-error"
           >
             {error}
           </div>
         )}
 
-        <div className="mt-5 flex gap-2">
+        <div className="mt-6 flex gap-2">
           <button type="button" onClick={onCancel} disabled={busy} className="btn-secondary flex-1">
             Отмена
           </button>

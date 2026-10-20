@@ -1,7 +1,7 @@
 import type { DocumentItem } from '../types'
 import { formatDate, formatSum } from '../lib/documents'
 import { StatusBadge } from './StatusBadge'
-import { FileIcon, PenIcon, XIcon } from './Icons'
+import { FileIcon, XIcon } from './Icons'
 
 interface Props {
   doc: DocumentItem | null
@@ -16,6 +16,7 @@ interface Props {
   onClose: () => void
 }
 
+/** Карточка документа: «Elevated» по DESIGN.md — верхняя линейка 2px, атрибуты строками с линейками */
 export function DetailPanel({
   doc,
   signing,
@@ -29,99 +30,94 @@ export function DetailPanel({
 }: Props) {
   if (!doc) {
     return (
-      <div className="card hidden h-full min-h-72 flex-col items-center justify-center p-8 text-center lg:flex">
-        <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-slate-400">
-          <FileIcon size={22} />
-        </span>
-        <p className="mt-3 text-sm font-semibold text-slate-600">Выберите документ из списка</p>
-        <p className="mt-1 text-xs text-slate-400">
-          Карточка откроется здесь, без перехода на другую страницу
-        </p>
+      <div className="card-elevated hidden h-full min-h-72 flex-col justify-center p-6 lg:flex">
+        <p className="label">Карточка документа</p>
+        <p className="h3 mt-2">Выберите документ из списка</p>
+        <p className="mt-2 text-meta">Карточка откроется здесь, без перехода на другую страницу</p>
       </div>
     )
   }
 
   const needsSign = doc.status === 'requires_signature'
+  const rows: [string, string][] = [
+    ['Сумма без НДС', formatSum(doc.sum)],
+    ['Получен', formatDate(doc.receivedAt)],
+    ['Получатель', doc.org],
+    ['Контрагент', doc.counterparty],
+  ]
 
   return (
-    <section aria-label="Карточка документа" className="card flex h-full flex-col overflow-hidden">
-      {/* Шапка карточки: статус задаёт цвет */}
-      <div
-        className={`flex items-start justify-between gap-3 px-5 pt-5 pb-4 ${needsSign ? 'bg-orange-50/60' : 'bg-slate-50/60'}`}
-      >
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+    <section aria-label="Карточка документа" className="card-elevated flex h-full flex-col bg-paper">
+      <div className="px-5 pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="caps truncate">
             {doc.kind} · {doc.org}
           </p>
-          <h2 className="mt-1 truncate text-lg font-extrabold tracking-tight">{doc.title}</h2>
-          <p className="truncate text-sm text-slate-600">{doc.counterparty}</p>
+          <div className="flex shrink-0 items-center gap-2">
+            <StatusBadge status={doc.status} />
+            <button
+              onClick={onClose}
+              aria-label="Закрыть карточку"
+              className="p-1.5 text-meta hover:bg-paper-subtle hover:text-ink lg:hidden"
+            >
+              <XIcon size={18} />
+            </button>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <StatusBadge status={doc.status} />
-          <button
-            onClick={onClose}
-            aria-label="Закрыть карточку"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-ink lg:hidden"
-          >
-            <XIcon size={18} />
-          </button>
-        </div>
+        <h2 className="h2 mt-3">{doc.title}</h2>
+        <p className="mt-1 text-meta">{doc.counterparty}</p>
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 p-5">
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <dt className="text-xs text-slate-500">Сумма без НДС</dt>
-            <dd className="text-base font-bold tabular-nums">{formatSum(doc.sum)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-slate-500">Получен</dt>
-            <dd className="font-semibold">{formatDate(doc.receivedAt)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-slate-500">Получатель</dt>
-            <dd className="font-semibold">{doc.org}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-slate-500">Контрагент</dt>
-            <dd className="truncate font-semibold">{doc.counterparty}</dd>
-          </div>
+      <div className="flex flex-1 flex-col gap-5 p-5">
+        <dl className="border-t-2 border-ink text-sm">
+          {rows.map(([k, v], i) => (
+            <div key={k} className="flex items-baseline justify-between gap-4 border-b border-rule py-2">
+              <dt className="caps">{k}</dt>
+              <dd
+                className={`truncate text-right ${i === 0 ? 'num text-base font-medium' : 'font-semibold'}`}
+              >
+                {v}
+              </dd>
+            </div>
+          ))}
         </dl>
 
         {/* Файл: PDF из хранилища (временная ссылка) либо отсутствие файла */}
-        <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 p-3">
-          <span
-            className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${doc.filePath ? 'bg-brand-50 text-brand-700' : 'bg-slate-100 text-slate-400'}`}
-          >
-            <FileIcon size={20} />
-          </span>
+        <div className="flex items-center gap-3 border border-rule p-3">
+          <FileIcon size={22} strokeWidth={1.5} className={doc.filePath ? 'text-ink' : 'text-meta-light'} />
           <div className="min-w-0 flex-1 text-sm">
             <p className="font-semibold">{doc.filePath ? 'PDF-документ' : 'PDF не приложен'}</p>
-            <p className="text-xs text-slate-500">
+            <p className="small text-meta">
               {doc.filePath ? 'Хранится в защищённом хранилище' : 'Файл можно приложить при добавлении'}
             </p>
           </div>
           {doc.filePath && (
-            <button onClick={onOpenFile} disabled={fileBusy} className="btn-secondary px-3 py-2 text-xs">
+            <button
+              onClick={onOpenFile}
+              disabled={fileBusy}
+              className="btn-ghost underline underline-offset-4"
+            >
               {fileBusy ? 'Ссылка…' : 'Открыть'}
             </button>
           )}
         </div>
 
         {signError && (
-          <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div
+            role="alert"
+            className="border-l-[3px] border-error bg-error-container p-3 text-sm text-on-error"
+          >
             {signError}
           </div>
         )}
 
-        <div className="mt-auto flex flex-col gap-2 pt-2">
+        <div className="mt-auto flex flex-col gap-3 pt-2">
           {needsSign && (
             <>
-              <button onClick={onRequestSign} disabled={signing} className="btn-primary w-full py-3">
-                <PenIcon size={16} />
+              <button onClick={onRequestSign} disabled={signing} className="btn-primary h-11 w-full">
                 {signing ? 'Подписываем…' : 'Утвердить и подписать'}
               </button>
-              <p className="text-center text-xs text-slate-400">
+              <p className="small text-center text-meta">
                 Откроется подтверждение: документ, подписант, сертификат
               </p>
             </>
@@ -129,7 +125,7 @@ export function DetailPanel({
           {canDelete && doc.status !== 'signed' && (
             <button
               onClick={onRequestDelete}
-              className="self-center text-xs font-semibold text-red-600 hover:underline"
+              className="self-center text-xs font-semibold text-urgent underline-offset-4 hover:underline"
             >
               Удалить документ
             </button>
