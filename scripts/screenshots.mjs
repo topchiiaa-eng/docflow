@@ -17,6 +17,7 @@ try {
   for (const s of shots) {
     const page = await browser.newPage()
     await page.setViewport({ width: s.w, height: s.h, isMobile: !!s.mobile, hasTouch: !!s.mobile })
+    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
     await page.goto(s.url, { waitUntil: 'networkidle0' })
     await page.waitForSelector(s.waitFor, { timeout: 10_000 })
     await page.screenshot({ path: `${OUT}/${s.name}.png` })

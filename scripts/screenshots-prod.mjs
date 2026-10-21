@@ -16,6 +16,8 @@ const b = await puppeteer.launch({
 try {
   const page = await b.newPage()
   await page.setViewport({ width: 1280, height: 720 })
+  // Скролл-анимации (reveal) отключаем, иначе скриншот ловит полупрозрачный контент
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
   await page.goto(BASE, { waitUntil: 'networkidle0' })
   await page.screenshot({ path: `${OUT}/live-login.png` })
 
@@ -77,6 +79,7 @@ try {
   const ctx = await b.createBrowserContext() // отдельная сессия: иначе вкладка уже залогинена
   const m = await ctx.newPage()
   await m.setViewport({ width: 375, height: 812, isMobile: true, hasTouch: true })
+  await m.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
   await m.goto(BASE, { waitUntil: 'networkidle0' })
   await m.waitForSelector('#email')
   await m.type('#email', email)
