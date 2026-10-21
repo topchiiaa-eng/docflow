@@ -456,7 +456,7 @@ const foot = (slide) =>
 {
   const s = newSlide()
   s.background = { color: C.white }
-  title(s, 'Интерфейс: готовая дизайн-система вместо «сгенерированной админки»')
+  title(s, 'Интерфейс по DESIGN.md: до и после')
   s.addText('ДО — итерация 1', {
     x: 0.6,
     y: 1.5,
